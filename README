@@ -1,0 +1,38 @@
+
+Usage:
+
+kp --list
+
+Lists all available packages in the Korora Project.
+
+
+kp --init
+
+Performs any necessary tree initialisation (think mock --init)
+
+
+kp --checkout=package
+
+Performs a checkout of a single package (identifiable by --list)
+
+Omission of a package name will default to checking out all packages.
+
+
+kp --build=package
+
+Performs a full build of the specified package through providing a release tarball.
+
+Omission of any package name will default to building all packages.
+
+
+kp --sync=package
+
+Syncs the specified package with kororaproject
+
+Omission of any package name will default to building all packages.
+
+
+
+kp --release
+
+Performs an --checkout, --sync and --build for all packages. Essentially building a kororaproject repository.
