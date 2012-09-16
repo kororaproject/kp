@@ -1,38 +1,116 @@
 
-Usage:
+Korora Package (KP)
 
-kp --list
+A Korora package can be considered a high level package that often (but not always) manages all Korora specific modifications to upstream packages. Some packages are entirely new projects which Korora has baked itself but they are treated much the same.
+
+The Korora packages are stored completely within git and are best managed with the Korora packaging utility is called “kp”. The kp utility allows you to reproduce the entire Korora ecosystem, as well as contribute easier to the project through submission of patches and pull requests.
+Configuration Files
+Each package is described by a configuration file which lives in the kp tree.
+
+The configuration file options are described as follows:
+
+---8<--- jockey.conf --->8---
+
+KP_NAME=jockey
+KP_VERSION=0.9.1
+
+# indicate what the upstream source is wrapped in and where to get it
+KP_UPSTREAM_SRC_TYPE=git,svn,rpm,tarball
+KP_UPSTREAM_SRC_URL=
+
+# GIT specific - what branch/commit should all package builds be built relative to
+KP_UPSTREAM_SRC_GIT_COMMIT=
+KP_UPSTREAM_SRC_GIT_BRANCH=
+
+# SVN specific - what revision number should all package builds be built relative to
+KP_UPSTREAM_SRC_SVN_REVISION
+
+
+# RPM specific - what’s the reference upstream spec
+KP_UPSTREAM_SPEC=%upstream%/spec
+
+
+# if undefined uses upstream spec (if defined) otherwise errors if missing
+KP_BUILD_SPEC=
+
+# the build spec will be dynamically built via the build spec template. Patch, source and build numbers will be dynamically updated based on the template.
+KP_BUILD_SPEC_TEMPLATE=
+KP_BUILD_ARCH=i686,x86_64
+
+# defines the commit of the latest stable release from the korora package tree
+KP_RELEASE_GIT_COMMIT=
+
+
+---8<--- end jockey.conf --->8---
+File Tree
+
+./upstream
+Contains the primary source relating to the package, could be a GIT, SVN url or the extracted source from an RPM (ie akin to extracted files from rpmbuild/SOURCES)
+
+./build
+Contains the necessary files to build the release RPM. If the upstream is GIT it will contain the necessary patches (based on appropriate git diff). SVN would be similar. The package spec file would be dynamically updated based on the
+
+./release
+   contains built RPMs
+
+Usage: kp --list
 
 Lists all available packages in the Korora Project.
 
 
-kp --init
+Example:
+
+# kp --list
+* jockey
+* anaconda
+* korora-plymouth-theme
+* korofox
+
+
+Usage: kp --init
 
 Performs any necessary tree initialisation (think mock --init)
 
 
-kp --checkout=package
+Example:
+
+# kp --init
+Korora package environment initialised at /home/me/kororapackages
+xxx MiB free
+
+
+Usage: kp --checkout package
 
 Performs a checkout of a single package (identifiable by --list)
 
 Omission of a package name will default to checking out all packages.
 
 
-kp --build=package
+Example:
+
+# kp -v --checkout jockey
+Creating package directory structure:
+ ./jockey
+ ./jockey/upstream
+ ./jockey/build
+ ./jockey/release
+Syncing upstream
+**git output**
+
+Usage: kp --build package
 
 Performs a full build of the specified package through providing a release tarball.
 
 Omission of any package name will default to building all packages.
 
 
-kp --sync=package
+Usage: kp --sync package
 
 Syncs the specified package with kororaproject
 
 Omission of any package name will default to building all packages.
 
 
+Usage: kp --release
 
-kp --release
-
-Performs an --checkout, --sync and --build for all packages. Essentially building a kororaproject repository.
+Performs a --checkout, --sync and --build for all packages. Essentially building a kororaproject repository.
