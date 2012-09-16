@@ -1,0 +1,36 @@
+KP_NAME=mozilla-adblock-plus
+KP_VERSION=2.1.2
+
+#override default git location for this package
+#GIT_URL=nowhere
+#GIT_URL_READONLY=nowhere-readonly
+
+#shouldn't spec handle this?
+# indicate what the upstream source is wrapped in and where to get it
+KP_UPSTREAM_SRC_TYPE=tarball
+KP_UPSTREAM_SRC_URL=spec
+
+KP_GIT_URL=git://github.com/kororaproject/$KP_NAME.git
+KP_UPSTREAM_SRC_URL=spec
+
+
+# GIT specific - what branch/commit should all package builds be built relative to
+KP_UPSTREAM_SRC_GIT_COMMIT=
+KP_UPSTREAM_SRC_GIT_BRANCH=
+
+# SVN specific - what revision number should all package builds be built relative to
+#KP_UPSTREAM_SRC_SVN_REVISION
+
+# RPM specific - what’s the reference upstream spec
+#KP_UPSTREAM_SPEC=%upstream%/spec
+
+# if undefined uses upstream spec (if defined) otherwise errors if missing
+KP_BUILD_SPEC=mozilla-adblock-plus.spec
+
+# the build spec will be dynamically built via the build spec template. Patch, source and build numbers will be dynamically updated based on the template.
+KP_BUILD_SPEC_TEMPLATE=
+KP_BUILD_ARCH=i686,x86_64
+
+# defines the commit of the latest stable release from the korora package tree
+KP_RELEASE_GIT_COMMIT=
+
