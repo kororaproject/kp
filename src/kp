@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+# Copyright 2012 "Korora Project" <dev@kororaproject.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the temms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+VERSION="0.1.0"
+
+#
+# DEFAULTS
+#
+
+[[ -z ${CONFIG_DIR} || ! -d ${CONFIG_DIR} ]] && CONFIG_DIR="/etc/kp"
+[[ -z ${LIB_DIR} || ! -d ${LIB_DIR} ]] && LIB_DIR="/usr/share/lib/kp/lib"
+[[ -z ${WORKING_DIR} || ! -d ${WORKING_DIR} ]] && WORKING_DIR="/var/lib/kp"
+[[ -z ${RELEASE_DIR} || ! -d ${RELEASE_DIR} ]] && RELEASE_DIR="/tmp"
+
+#
+# INCLUDES
+#
+if [ ! -d "${LIB_DIR}" ]
+then
+  echo "FATAL: Invalid LIB_DIR defined."
+  exit 1
+else
+  source ${LIB_DIR}/kp_core
+fi
+
+
+SCRIPT=$(basename $0)
+
+
+DEBUG=1
+
+#
+# INCLUDES
+#
+
+
+CALL_PATH=$(dirname $0)
+
+# assume first parameter to be the subcommand
+SUB_COMMAND=$1; shift
+
+case ${SUB_COMMAND} in
+   init)
+     source ${LIB_DIR}/kp_init $@
+     ;;
+   list)
+     source ${LIB_DIR}/kp_list $@
+     ;;
+   build)
+     source ${LIB_DIR}/kp_build $@
+     ;;
+   sync)
+     source ${LIB_DIR}/kp_sync $@
+     ;;
+   checkout)
+     source ${LIB_DIR}/kp_checkout $@
+     ;;
+   release)
+     source ${LIB_DIR}/kp_release $@
+     ;;
+  default)
+    ;;
+esac
+
+# start the main function sourced above
+main

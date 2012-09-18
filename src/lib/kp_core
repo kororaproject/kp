@@ -1,0 +1,325 @@
+#!/bin/bash
+#
+# Copyright 2012 "Korora Project" <dev@kororaproject.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the temms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# Utility functions for Korora building.
+
+#
+# VERSION/USAGE
+#
+
+function version {
+  _EXIT_VAL=${1:-0}
+
+  echo "${SCRIPT} - v${VERSION}"
+  echo
+  echo "Member of the Korora Packaging Utility. Written by the kororaproject.org team."
+  echo "Powered by freedom, dedication and the pursuit of perfection."
+  echo
+  echo "http://www.kororaproject.org"
+  echo
+
+  exit ${_EXIT_VAL}
+}
+
+#
+# PRINT HANDLING
+#
+
+function _error {
+  _MSG=${1:-""}
+
+  echo "E: ${_MSG}" >&2
+}
+
+function _warn {
+  _MSG=${1:-""}
+
+  echo "W: ${_MSG}" >&2
+}
+
+function _info {
+  _MSG=${1:-""}
+
+  echo "I: ${_MSG}" >&2
+}
+
+function _debug {
+  _MSG=${1:-""}
+
+  [ -z "${DEBUG}" ] && return 0
+
+  echo "D: ${_MSG}" >&2
+}
+
+#
+# CONFIG HANDLING FUNCTIONS
+#
+
+function reset_config_variables {
+  KP_NAME=
+  KP_VERSION=
+  KP_URL=
+  KP_UPSTREAM_SRC_TYPE=
+  KP_UPSTREAM_SRC_GIT_URL=
+  KP_UPSTREAM_SRC_GIT_BRANCH=
+  KP_UPSTREAM_SRC_GIT_COMMIT=
+  KP_UPSTREAM_SRC_SVN_URL=
+  KP_UPSTREAM_SRC_SVN_REVISION=
+  KP_UPSTREAM_SPEC=
+  KP_BUILD_SPEC=
+  KP_BUILD_SPEC_TEMPLATE=
+  KP_BUILD_ARCH=
+  KP_RELEASE_GIT_COMMIT=
+}
+
+function load_config {
+  _PACKAGE=${1:-''}
+
+  if [ -z $_PACKAGE ]
+  then
+    _debug "No package specified for loading."
+    return 1
+  elif [ ! -r "${CONFIG_DIR}/${_PACKAGE}.conf" ]
+  then
+    _debug "Can't find configuration ${CONFIG_DIR}/${_PACKAGE}.conf"
+    return 1
+  fi
+
+  # reset all available config variables
+  reset_config_variables
+
+  # source the config variables
+  source "${CONFIG_DIR}/${_PACKAGE}.conf"
+
+  # TODO: validate the config
+  # we need KP_NAME, KP_VERSION, KP_URL, KP_BUILD_SPEC_TEMPLATE
+  # KP_BUILD_ARCH as a minimum
+  if [ -z "${KP_NAME}" ]
+  then
+    _error "KP_NAME is missing from the config."
+  elif [ -z "${KP_VERSION}" ]
+  then
+    _error "KP_VERSION is missing from the config."
+  else
+    return 0
+  fi
+
+  return 1
+}
+
+function list_config_available {
+  _FILES=""
+  for C in $(ls -1 ${CONFIG_DIR}/kp-*.conf)
+  do
+    _FILE=$(basename $C)
+    _FILES="${_FILES} ${_FILE%.*}"
+  done
+
+  echo ${_FILES}
+}
+
+function print_config_details {
+  _PACKAGE_FILE=${1:-''}
+
+  if [ -z ${_PACKAGE_FILE} ]
+  then
+    return 1
+  fi
+
+  #
+  load_package_config_file ${CONFIG_DIR}/$_PACKAGE.conf
+  _RET=${?}
+
+  if [ ${_RET} -eq 0 ]
+  then
+    true
+  fi
+
+  return ${_RET}
+}
+
+
+
+#
+# CHECKOUT FUNCTIONS
+#
+
+#
+# package_checkout(void)
+#
+# Performs a checkout of a Korora package into the working direcotry.
+#
+# Note: assumes the package config has been sourced
+#
+function package_checkout {
+  if [ -z ${KP_NAME} ]
+  then
+    _error "No configuration file loaded (KP_NAME undefined). Unable to checkout package."
+    return 1
+  elif [ -z ${KP_UPSTREAM_SRC_TYPE} ]
+  then
+    _error "No upstream type specified (KP_UPSTREAM_SRC_TYPE undefined)."
+    return 1
+  fi
+
+  _WORKING_PATH="${WORKING_DIR}/${KP_NAME}"
+
+  # check if destination path already exists
+  if [ -d "${_WORKING_PATH}" ]
+  then
+    _debug "Project path already exists: ${_WORKING_PATH}"
+    return 0
+  fi
+
+  _debug "Creating package path: ${_WORKING_PATH}"
+
+  if ! mkdir ${_WORKING_PATH}
+  then
+    _error "Unable to create package path: ${_WORKING_PATH}"
+    return 1
+  fi
+
+  # update tree, fetching all branches and tags
+  _debug "Cloning from: ${KP_URL}"
+
+  _OUT=$(git clone ${KP_URL} ${_WORKING_PATH})
+  if [ ${?} -ne 0 ]
+  then
+    _error "Unknown upstream source type specified: ${KP_UPSTREAM_SRC_TYPE}"
+    return 1
+  fi
+
+  _warn "TODO: implement commit check"
+
+  # get the last commit and uncommit count
+  _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
+  _UNCOMMITED_CHANGES=$(git status -s | wc -l)
+
+  return 0
+}
+
+
+#
+# SYNCRHONISATION FUNCTIONS
+#
+
+#
+# expects a configuration file to be loaded and
+# thus KP_NAME is valid
+#
+function get_sync_status {
+  _USE_CACHE=${1:-}
+
+  KP_SYNC_STATE="-"
+
+  if [ -z ${KP_NAME} ]
+  then
+    _error "No configuration file loaded (KP_NAME undefined). Unable to determine sync status."
+    return 1
+  elif [ -z ${KP_UPSTREAM_SRC_TYPE} ]
+  then
+    _error "No upstream type specified (KP_UPSTREAM_SRC_TYPE undefined)."
+    return 1
+  fi
+
+  # sync requires the package directory to exist
+  [ ! -d ${WORKING_DIR}/${KP_NAME} ] && return 0
+
+  KP_SYNC_STATE="?"
+
+  # sync requires the package upstream directory to sync
+  [ ! -d ${WORKING_DIR}/${KP_NAME}/upstream ] && return 0
+
+  pushd "${WORKING_DIR}/${KP_NAME}/upstream" >/dev/null
+
+  # assume modified unless proven in sync
+  KP_SYNC_STATE="M"
+
+  # need to assess sync based on type
+  if [ "${KP_UPSTREAM_SRC_TYPE}" == "git" ]
+  then
+
+    if [ -n "${_USE_CACHE}" ]
+    then
+      # update tree, fetching all branches and tags
+      _debug "Updating all branches and tags from origin."
+      _OUT=$(git fetch --all --tags 2>&1)
+
+      if [ ${?} -eq 0 ]
+      then
+        _warn "TODO: implement commit check"
+
+        # get the last commit and uncommit count
+        _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
+        _UNCOMMITED_CHANGES=$(git status -s | wc -l)
+
+        if [ ${_UNCOMMITED_CHANGES} -eq 0 ]
+        then
+          KP_SYNC_STATE="S"
+        fi
+
+      else
+        _debug "${_OUT}"
+      fi
+    fi
+  elif [ "${KP_UPSTREAM_SRC_TYPE}" == "svn" ]
+  then
+    _warn "TODO: implement SVN sync check."
+  elif [ "${KP_UPSTREAM_SRC_TYPE}" == "local" ]
+  then
+    if [ -n "${_USE_CACHE}" ]
+    then
+      # update tree, fetching all branches and tags
+      _debug "Updating all branches and tags from origin."
+      _OUT=$(git fetch --all --tags 2>&1)
+
+      if [ ${?} -eq 0 ]
+      then
+        _warn "TODO: implement commit check"
+
+        # get the last commit and uncommit count
+        _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
+        _UNCOMMITED_CHANGES=$(git status -s | wc -l)
+
+        if [ ${_UNCOMMITED_CHANGES} -eq 0 ]
+        then
+          KP_SYNC_STATE="S"
+        fi
+
+      else
+        _debug "${_OUT}"
+      fi
+    fi
+  else
+    _warn "Unknown upstream source type specified: ${KP_UPSTREAM_SRC_TYPE}"
+  fi
+
+  popd >/dev/null
+}
+
+
+#
+# BUILD FUNCTIONS
+#
+
+
+#
+# RELEASE FUNCTIONS
+#
+
+

@@ -1,0 +1,119 @@
+#!/bin/bash
+#
+# Copyright 2012 "Korora Project" <dev@kororaproject.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the temms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+#
+# INTIALISE
+#
+OPT_VERBOSE=
+OPT_CHECKOUT_ONLY=
+
+
+#
+# FUNCTIONS
+#
+function usage {
+  _EXIT_VAL=${1:-0}
+
+  echo << EOF
+  Usage: $0 [-v] package1 package2 ... packageN
+
+  Options:
+    -v   Show verbose output
+    -?   Show this usage
+    -V   Show version
+
+  Long Options:
+    --verbose     Same as -v
+    --help        Same as -?
+    --version     Same as -V
+EOF
+
+  exit ${_EXIT_VAL};
+}
+
+#
+# PARSE COMMAND LINE
+#
+
+CMD_LINE=$(getopt -n$0 -u --longoptions="verbose version help" "v V ?" $@)
+[ ${?} -ne 0 ] && usage 1
+
+set -- ${CMD_LINE}
+
+while [ $# -gt 0 ]
+do
+  case "$1" in
+    -v|--verbose)
+      OPT_VERBOSE=1
+      ;;
+    -V|--version)
+      version 0
+      ;;
+    -h|--help)
+      usage 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      usage 1
+      ;;
+    *)
+      break
+  esac
+  shift
+done
+
+# remaining arduments are packages
+if [ $# -eq 0 ]
+then
+  echo "ERROR: No packages were specified for check out."
+  exit 1
+fi
+
+PACKAGES=
+while [ $# -gt 0 ]
+do
+  PACKAGES="${PACKAGES} $1"
+  shift
+done
+
+#
+# MAIN
+#
+
+function main {
+
+
+  # load the configuration
+  for F in $(list_config_available)
+  do
+    load_config ${F}
+    [ ${?} -ne 0 ] && continue
+
+    # skip if this is not requested
+    echo ${PACKAGES} | grep -q ${KP_NAME} || continue
+
+    # start the checkout
+    echo "Checking out: ${KP_NAME}"
+
+    package_checkout
+  done
+}
+
