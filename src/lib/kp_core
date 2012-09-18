@@ -89,14 +89,15 @@ function reset_config_variables {
 
 function load_config {
   _PACKAGE=${1:-''}
+  _PACKAGE_CONF="${CONFIG_DIR}/packages.d/${_PACKAGE}.conf"
 
   if [ -z $_PACKAGE ]
   then
     _debug "No package specified for loading."
     return 1
-  elif [ ! -r "${CONFIG_DIR}/${_PACKAGE}.conf" ]
+  elif [ ! -r "${_PACKAGE_CONF}" ]
   then
-    _debug "Can't find configuration ${CONFIG_DIR}/${_PACKAGE}.conf"
+    _debug "Can't find configuration ${_PACKAGE_CONF}"
     return 1
   fi
 
@@ -104,7 +105,7 @@ function load_config {
   reset_config_variables
 
   # source the config variables
-  source "${CONFIG_DIR}/${_PACKAGE}.conf"
+  source "${_PACKAGE_CONF}"
 
   # TODO: validate the config
   # we need KP_NAME, KP_VERSION, KP_URL, KP_BUILD_SPEC_TEMPLATE
@@ -124,7 +125,7 @@ function load_config {
 
 function list_config_available {
   _FILES=""
-  for C in $(ls -1 ${CONFIG_DIR}/kp-*.conf)
+  for C in $(ls -1 ${CONFIG_DIR}/packages.d/kp-*.conf)
   do
     _FILE=$(basename $C)
     _FILES="${_FILES} ${_FILE%.*}"

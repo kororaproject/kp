@@ -30,6 +30,15 @@ VERSION="0.1.0"
 #
 # INCLUDES
 #
+
+if [ ! -r "${CONFIG_DIR}/kp.conf" ]
+then
+  echo "FATAL: No configuration file found."
+  exit 1
+else
+  source ${CONFIG_DIR}/kp.conf
+fi
+
 if [ ! -d "${LIB_DIR}" ]
 then
   echo "FATAL: Invalid LIB_DIR defined."
