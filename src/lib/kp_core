@@ -161,13 +161,16 @@ function print_config_details {
 #
 
 #
-# package_checkout(void)
+# package_upstream_checkout(void)
 #
-# Performs a checkout of a Korora package into the working direcotry.
+# Performs a checkout of a Korora package's upstream into respective upstream
+# package directory.
 #
 # Note: assumes the package config has been sourced
 #
-function package_checkout {
+
+function package_upstream_checkout {
+
   if [ -z ${KP_NAME} ]
   then
     _error "No configuration file loaded (KP_NAME undefined). Unable to checkout package."
@@ -175,6 +178,29 @@ function package_checkout {
   elif [ -z ${KP_UPSTREAM_SRC_TYPE} ]
   then
     _error "No upstream type specified (KP_UPSTREAM_SRC_TYPE undefined)."
+    return 1
+  elif [ -z ${KP_UPSTREAM_SRC_URL} ]
+  then
+    _error "No upstream URL specified (KP_UPSTREAM_SRC_URL undefined)."
+    return 1
+  fi
+
+  return 0
+}
+
+#
+# package_checkout(void)
+#
+# Performs a checkout of a Korora package into the working directory.
+#
+# Note: assumes the package config has been sourced
+#
+function package_checkout {
+  _GET_UPSTREAM=${1:-}
+
+  if [ -z ${KP_NAME} ]
+  then
+    _error "No configuration file loaded (KP_NAME undefined). Unable to checkout package."
     return 1
   fi
 
@@ -210,6 +236,11 @@ function package_checkout {
   # get the last commit and uncommit count
   _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
   _UNCOMMITED_CHANGES=$(git status -s | wc -l)
+
+  if [ -n "${_GET_UPSTREAM}" ]
+  then
+    package_upstream_checkout
+  fi
 
   return 0
 }
@@ -254,29 +285,26 @@ function get_sync_status {
   # need to assess sync based on type
   if [ "${KP_UPSTREAM_SRC_TYPE}" == "git" ]
   then
-
     if [ -n "${_USE_CACHE}" ]
     then
       # update tree, fetching all branches and tags
       _debug "Updating all branches and tags from origin."
       _OUT=$(git fetch --all --tags 2>&1)
-
-      if [ ${?} -eq 0 ]
+      if [ ${?} -ne 0 ]
       then
-        _warn "TODO: implement commit check"
-
-        # get the last commit and uncommit count
-        _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
-        _UNCOMMITED_CHANGES=$(git status -s | wc -l)
-
-        if [ ${_UNCOMMITED_CHANGES} -eq 0 ]
-        then
-          KP_SYNC_STATE="S"
-        fi
-
-      else
         _debug "${_OUT}"
       fi
+    fi
+
+    _warn "TODO: implement commit check"
+
+    # get the last commit and uncommit count
+    _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
+    _UNCOMMITED_CHANGES=$(git status -s | wc -l)
+
+    if [ ${_UNCOMMITED_CHANGES} -eq 0 ]
+    then
+      KP_SYNC_STATE="S"
     fi
   elif [ "${KP_UPSTREAM_SRC_TYPE}" == "svn" ]
   then
@@ -288,23 +316,21 @@ function get_sync_status {
       # update tree, fetching all branches and tags
       _debug "Updating all branches and tags from origin."
       _OUT=$(git fetch --all --tags 2>&1)
-
-      if [ ${?} -eq 0 ]
+      if [ ${?} -ne 0 ]
       then
-        _warn "TODO: implement commit check"
-
-        # get the last commit and uncommit count
-        _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
-        _UNCOMMITED_CHANGES=$(git status -s | wc -l)
-
-        if [ ${_UNCOMMITED_CHANGES} -eq 0 ]
-        then
-          KP_SYNC_STATE="S"
-        fi
-
-      else
         _debug "${_OUT}"
       fi
+    fi
+
+    _warn "TODO: implement commit check"
+
+    # get the last commit and uncommit count
+    _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
+    _UNCOMMITED_CHANGES=$(git status -s | wc -l)
+
+    if [ ${_UNCOMMITED_CHANGES} -eq 0 ]
+    then
+      KP_SYNC_STATE="S"
     fi
   else
     _warn "Unknown upstream source type specified: ${KP_UPSTREAM_SRC_TYPE}"

@@ -80,27 +80,24 @@ do
   shift
 done
 
-# remaining arduments are packages
+# remaining arguments are packages
+PACKAGES=
 if [ $# -eq 0 ]
 then
-  echo "ERROR: No packages were specified for check out."
-  exit 1
+  echo "Checking out all package ..."
+else
+  while [ $# -gt 0 ]
+  do
+    PACKAGES="${PACKAGES} $1"
+    shift
+  done
 fi
-
-PACKAGES=
-while [ $# -gt 0 ]
-do
-  PACKAGES="${PACKAGES} $1"
-  shift
-done
 
 #
 # MAIN
 #
 
 function main {
-
-
   # load the configuration
   for F in $(list_config_available)
   do
@@ -108,7 +105,10 @@ function main {
     [ ${?} -ne 0 ] && continue
 
     # skip if this is not requested
-    echo ${PACKAGES} | grep -q ${KP_NAME} || continue
+    if [ -n "${PACKAGES}" ]
+    then
+      echo ${PACKAGES} | grep -q ${KP_NAME} || continue
+    fi
 
     # start the checkout
     echo "Checking out: ${KP_NAME}"
