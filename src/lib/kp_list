@@ -44,9 +44,14 @@ function usage {
     --help        Same as -?
     --version     Same as -V
 
-  Status:
+  Package status codes:
    -    Available but not checked out
-   A    Package checked out only. Upstream not available.
+   S    Synchronised with upstream
+   M    Local modifications
+
+  Upstream status codes:
+        Package is not checked out
+   -    Upsream available but not checkout out.
    S    Synchronised with upstream
    M    Local modifications
 EOF
@@ -110,13 +115,13 @@ function main {
     get_sync_status
     [ ${?} -ne 0 ] && continue
 
-    [ -n "${OPT_CHECKOUT_ONLY}" -a "${KP_SYNC_STATE}" == "-" ] && continue
+    [ -n "${OPT_CHECKOUT_ONLY}" -a "${KP_PACKAGE_SYNC_STATE}" == "-" ] && continue
 
     if [ -z ${OPT_VERBOSE} ]
     then
-      printf " %s  %-32s\n" ${KP_SYNC_STATE} ${KP_NAME}
+      printf " %s%s  %-32s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}"
     else
-      printf " %s  %-32s\t%-8s\t%s\n" ${KP_SYNC_STATE} ${KP_NAME} ${KP_VERSION} ${KP_URL}
+      printf " %s%s  %-32s\t%-8s\t%s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}" "${KP_VERSION}" "${KP_URL}"
     fi
   done
 }

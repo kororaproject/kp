@@ -21,6 +21,7 @@
 #
 OPT_VERBOSE=
 OPT_CHECKOUT_ONLY=
+OPT_UPSTREAM=
 
 
 #
@@ -124,7 +125,7 @@ function main {
     # grab the relevant upstream source
     if [ -n ${OPT_UPSTREAM} ]
     then
-      package_checkout_upstream
+      package_upstream_checkout
     fi
   done
 }

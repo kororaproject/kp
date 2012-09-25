@@ -189,7 +189,7 @@ function package_upstream_checkout {
   if [ ! -d "${WORKING_DIR}/${KP_NAME}/upstream" ]
   then
     _debug "Creating upstream directory."
-    mkdir -d "${WORKING_DIR}/${KP_NAME}/upstream"
+    mkdir -p "${WORKING_DIR}/${KP_NAME}/upstream"
   fi
 
   # need to assess checkout based on type
@@ -233,8 +233,6 @@ function package_upstream_checkout {
 # Note: assumes the package config has been sourced
 #
 function package_checkout {
-  _GET_UPSTREAM=${1:-}
-
   if [ -z ${KP_NAME} ]
   then
     _error "No configuration file loaded (KP_NAME undefined). Unable to checkout package."
@@ -273,12 +271,6 @@ function package_checkout {
   # get the last commit and uncommit count
   _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
   _UNCOMMITED_CHANGES=$(git status -s | wc -l)
-
-  if [ -n "${_GET_UPSTREAM}" ]
-  then
-    package_upstream_checkout
-  fi
-
   return 0
 }
 
@@ -294,7 +286,8 @@ function package_checkout {
 function get_sync_status {
   _USE_CACHE=${1:-}
 
-  KP_SYNC_STATE="-"
+  KP_PACKAGE_SYNC_STATE="-"
+  KP_UPSTREAM_SYNC_STATE=" "
 
   if [ -z ${KP_NAME} ]
   then
@@ -305,6 +298,8 @@ function get_sync_status {
     _error "No upstream type specified (KP_UPSTREAM_SRC_TYPE undefined)."
     return 1
   fi
+
+  
 
   # sync requires the package directory to exist
   [ ! -d ${WORKING_DIR}/${KP_NAME} ] && return 0
@@ -317,7 +312,7 @@ function get_sync_status {
   pushd "${WORKING_DIR}/${KP_NAME}/upstream" >/dev/null
 
   # assume modified unless proven in sync
-  KP_SYNC_STATE="M"
+  KP_UPSTREAM_SYNC_STATE="M"
 
   # need to assess sync based on type
   if [ "${KP_UPSTREAM_SRC_TYPE}" == "git" ]
@@ -341,7 +336,7 @@ function get_sync_status {
 
     if [ ${_UNCOMMITED_CHANGES} -eq 0 ]
     then
-      KP_SYNC_STATE="S"
+      KP_UPSTREAM_SYNC_STATE="S"
     fi
   elif [ "${KP_UPSTREAM_SRC_TYPE}" == "svn" ]
   then
@@ -367,7 +362,7 @@ function get_sync_status {
 
     if [ ${_UNCOMMITED_CHANGES} -eq 0 ]
     then
-      KP_SYNC_STATE="S"
+      KP_UPSTREAM_SYNC_STATE="S"
     fi
   else
     _warn "Unknown upstream source type specified: ${KP_UPSTREAM_SRC_TYPE}"
