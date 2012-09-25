@@ -50,48 +50,53 @@ EOF
 # PARSE COMMAND LINE
 #
 
-CMD_LINE=$(getopt -n$0 -u --longoptions="verbose version help" "v V ?" $@)
-[ ${?} -ne 0 ] && usage 1
+function parse_args {
+  CMD_LINE=$(getopt -n$0 -u --longoptions="upstream verbose version help" "U v V ?" $@)
+  [ ${?} -ne 0 ] && usage 1
 
-set -- ${CMD_LINE}
+  set -- ${CMD_LINE}
 
-while [ $# -gt 0 ]
-do
-  case "$1" in
-    -v|--verbose)
-      OPT_VERBOSE=1
-      ;;
-    -V|--version)
-      version 0
-      ;;
-    -h|--help)
-      usage 0
-      ;;
-    --)
-      shift
-      break
-      ;;
-    -*)
-      usage 1
-      ;;
-    *)
-      break
-  esac
-  shift
-done
-
-# remaining arguments are packages
-PACKAGES=
-if [ $# -eq 0 ]
-then
-  echo "Checking out all package ..."
-else
   while [ $# -gt 0 ]
   do
-    PACKAGES="${PACKAGES} $1"
+    case "$1" in
+      -U|--upstream)
+        OPT_UPSTREAM=1
+        ;;
+      -v|--verbose)
+        OPT_VERBOSE=1
+        ;;
+      -V|--version)
+        version 0
+        ;;
+      -h|--help)
+        usage 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        usage 1
+        ;;
+      *)
+        break
+    esac
     shift
   done
-fi
+
+  # remaining arguments are packages
+  PACKAGES=
+  if [ $# -eq 0 ]
+  then
+    echo "Checking out all package ..."
+  else
+    while [ $# -gt 0 ]
+    do
+      PACKAGES="${PACKAGES} $1"
+      shift
+    done
+  fi
+}
 
 #
 # MAIN
@@ -113,7 +118,14 @@ function main {
     # start the checkout
     echo "Checking out: ${KP_NAME}"
 
+    # grab the korora package
     package_checkout
+
+    # grab the relevant upstream source
+    if [ -n ${OPT_UPSTREAM} ]
+    then
+      package_checkout_upstream
+    fi
   done
 }
 

@@ -185,6 +185,43 @@ function package_upstream_checkout {
     return 1
   fi
 
+  # checkout requires the package upstream directory to sync
+  if [ ! -d "${WORKING_DIR}/${KP_NAME}/upstream" ]
+  then
+    _debug "Creating upstream directory."
+    mkdir -d "${WORKING_DIR}/${KP_NAME}/upstream"
+  fi
+
+  # need to assess checkout based on type
+  if [ "${KP_UPSTREAM_SRC_TYPE}" == "git" ]
+  then
+    if [ -n "${_USE_CACHE}" ]
+    then
+      # update tree, fetching all branches and tags
+      _debug "Cloning upstream : ${KP_UPSTREAM_SRC_URL}"
+      _OUT=$(git clone ${KP_UPSTREAM_SRC_URL} ${WORKING_DIR}/${KP_NAME}/upstream)
+      if [ ${?} -ne 0 ]
+      then
+        _debug "${_OUT}"
+      fi
+    fi
+
+    _warn "TODO: implement commit check"
+
+    # get the last commit and uncommit count
+    _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
+    _UNCOMMITED_CHANGES=$(git status -s | wc -l)
+
+  elif [ "${KP_UPSTREAM_SRC_TYPE}" == "svn" ]
+  then
+    _warn "TODO: implement SVN sync check."
+  elif [ "${KP_UPSTREAM_SRC_TYPE}" == "local" ]
+  then
+    _debug "Upstream already available in local package."
+  else
+    _warn "Unknown upstream source type specified: ${KP_UPSTREAM_SRC_TYPE}"
+  fi
+
   return 0
 }
 
@@ -272,7 +309,7 @@ function get_sync_status {
   # sync requires the package directory to exist
   [ ! -d ${WORKING_DIR}/${KP_NAME} ] && return 0
 
-  KP_SYNC_STATE="?"
+  KP_SYNC_STATE="A"
 
   # sync requires the package upstream directory to sync
   [ ! -d ${WORKING_DIR}/${KP_NAME}/upstream ] && return 0

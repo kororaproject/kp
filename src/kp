@@ -87,4 +87,6 @@ case ${SUB_COMMAND} in
 esac
 
 # start the main function sourced above
+parse_args $@
+
 main
