@@ -123,7 +123,7 @@ function main {
     package_checkout
 
     # grab the relevant upstream source
-    if [ -n ${OPT_UPSTREAM} ]
+    if [ -n "${OPT_UPSTREAM}" ]
     then
       package_upstream_checkout
     fi

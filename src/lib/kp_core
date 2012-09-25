@@ -185,17 +185,20 @@ function package_upstream_checkout {
     return 1
   fi
 
+  _UPSTREAM_DIR="${WORKING_DIR}/${KP_NAME}/upstream"
+
   # checkout requires the package upstream directory to sync
-  if [ ! -d "${WORKING_DIR}/${KP_NAME}/upstream" ]
+  if [ ! -d "${_UPSTREAM_DIR}" ]
   then
     _debug "Creating upstream directory."
-    mkdir -p "${WORKING_DIR}/${KP_NAME}/upstream"
+    mkdir -p "${_UPSTREAM_DIR}"
   fi
 
   # need to assess checkout based on type
   if [ "${KP_UPSTREAM_SRC_TYPE}" == "git" ]
   then
-    if [ -n "${_USE_CACHE}" ]
+    # check if we have a checkout already
+    if [ ! -d "${UPSTREAM_DIR}/.git" ]
     then
       # update tree, fetching all branches and tags
       _debug "Cloning upstream : ${KP_UPSTREAM_SRC_URL}"
@@ -209,8 +212,8 @@ function package_upstream_checkout {
     _warn "TODO: implement commit check"
 
     # get the last commit and uncommit count
-    _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
-    _UNCOMMITED_CHANGES=$(git status -s | wc -l)
+#    _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
+#    _UNCOMMITED_CHANGES=$(git status -s | wc -l)
 
   elif [ "${KP_UPSTREAM_SRC_TYPE}" == "svn" ]
   then
@@ -298,8 +301,6 @@ function get_sync_status {
     _error "No upstream type specified (KP_UPSTREAM_SRC_TYPE undefined)."
     return 1
   fi
-
-  
 
   # sync requires the package directory to exist
   [ ! -d ${WORKING_DIR}/${KP_NAME} ] && return 0
