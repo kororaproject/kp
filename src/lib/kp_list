@@ -30,30 +30,31 @@ function usage {
   _EXIT_VAL=${1:-0}
 
   cat << EOF
-  Usage: $0 [-vc]
+Usage: $0 list [-vc]
 
-  Options:
-    -c   Show checked out packages only
-    -v   Show verbose output
-    -?   Show this usage
-    -V   Show version
+Options:
+  -c   Show checked out packages only
+  -v   Show verbose output
+  -?   Show this usage
+  -V   Show version
 
-  Long Options:
-    --checkout    Same as -c
-    --verbose     Same as -v
-    --help        Same as -?
-    --version     Same as -V
+Long Options:
+  --checkout    Same as -c
+  --verbose     Same as -v
+  --help        Same as -?
+  --version     Same as -V
 
-  Package status codes:
-   -    Available but not checked out
-   S    Synchronised with upstream
-   M    Local modifications
+Package status codes:
+  -    Available but not checked out
+  S    Synchronised with upstream
+  M    Local modifications
 
-  Upstream status codes:
-        Package is not checked out
-   -    Upsream available but not checkout out.
-   S    Synchronised with upstream
-   M    Local modifications
+Upstream status codes:
+       Package is not checked out
+  -    Upsream available but not checkout out.
+  S    Synchronised with upstream
+  M    Local modifications
+
 EOF
 
   exit ${_EXIT_VAL};
@@ -81,7 +82,7 @@ function parse_args {
       -V|--version)
         version 0
         ;;
-      -h|--help)
+      --help)
         usage 0
         ;;
       --)
@@ -104,7 +105,7 @@ function parse_args {
 #
 
 function main {
-  echo "Korora Packages:"
+  _info "Korora Packages:"
 
   # load the configuration
   for F in $(list_config_available)
@@ -117,11 +118,17 @@ function main {
 
     [ -n "${OPT_CHECKOUT_ONLY}" -a "${KP_PACKAGE_SYNC_STATE}" == "-" ] && continue
 
+    # preserve whitespace in our output
+    IFS="%"
+
     if [ -z ${OPT_VERBOSE} ]
     then
-      printf " %s%s  %-32s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}"
+      _info $(printf " %s%s  %-32s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}")
     else
-      printf " %s%s  %-32s\t%-8s\t%s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}" "${KP_VERSION}" "${KP_URL}"
+      _info $(printf " %s%s  %-32s\t%-8s\t%s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}" "${KP_VERSION}" "${KP_URL}")
     fi
+
+    # reset the input field seperator
+    unset IFS
   done
 }
