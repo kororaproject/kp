@@ -20,7 +20,9 @@
 # INTIALISE
 #
 OPT_VERBOSE=
-OPT_FORCE=
+OPT_LIST=
+OPT_USB=
+OPT_ISO=1
 
 
 #
@@ -30,16 +32,18 @@ function usage {
   _EXIT_VAL=${1:-0}
 
   cat << EOF
-Usage: $0 init [options]
+Usage: $0 release [options]
 
 Options:
-  -f   Force cleaning of existing paths
+  -l,  List available kickstarts to build
   -v   Show verbose output
   -?   Show this usage
   -V   Show version
 
 Long Options:
-  --force       Same as -f
+  --list        Same as -l
+  --iso         Build an ISO image [default]
+  --usb         Build a USB image
   --verbose     Same as -v
   --help        Same as -?
   --version     Same as -V
@@ -54,7 +58,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="force verbose version help" "f v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="list iso usb verbose version help" "l v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -62,8 +66,16 @@ function parse_args {
   while [ $# -gt 0 ]
   do
     case "$1" in
-      -f|--force)
-        OPT_FORCE=1
+      -l|--list)
+        OPT_LIST=1
+        ;;
+      --iso)
+        OPT_ISO=1
+        OPT_USB=
+        ;;
+      --usb)
+        OPT_ISO=
+        OPT_USB=1
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -104,13 +116,13 @@ function main {
 
   if [ ! -d "${WORKING_DIR}" ]
   then
-    create_dirs
+    _info "Creating ..."
+    mkdir -p "${WORKING_DIR}/"
   elif [ -n "${OPT_FORCE}" ]
   then
     _info "Already exists. Forcing clean ..."
 
     rm -rf "${WORKING_DIR}/*"
-    create_dirs
   else
     _info "Already exists."
   fi
@@ -127,10 +139,3 @@ function main {
   fi
 }
 
-function create_dirs {
-  for d in packages repository kickstart release
-  do
-    _info " - Creating $d"
-    mkdir -p "${WORKING_DIR}/$d" || _warn "Unable to create."
-  done
-}

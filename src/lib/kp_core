@@ -185,7 +185,7 @@ function package_upstream_checkout {
     return 1
   fi
 
-  _UPSTREAM_DIR="${WORKING_DIR}/${KP_NAME}/upstream"
+  _UPSTREAM_DIR="${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream"
 
   # checkout requires the package upstream directory to sync
   if [ ! -d "${_UPSTREAM_DIR}" ]
@@ -202,7 +202,7 @@ function package_upstream_checkout {
     then
       # update tree, fetching all branches and tags
       _debug "Cloning upstream : ${KP_UPSTREAM_SRC_URL}"
-      _OUT=$(git clone ${KP_UPSTREAM_SRC_URL} ${WORKING_DIR}/${KP_NAME}/upstream)
+      _OUT=$(git clone ${KP_UPSTREAM_SRC_URL} ${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream)
       if [ ${?} -ne 0 ]
       then
         _debug "${_OUT}"
@@ -242,7 +242,7 @@ function package_checkout {
     return 1
   fi
 
-  _WORKING_PATH="${WORKING_DIR}/${KP_NAME}"
+  _WORKING_PATH="${WORKING_PACKAGES_DIR}/${KP_NAME}"
 
   # check if destination path already exists
   if [ -d "${_WORKING_PATH}" ]
@@ -303,14 +303,14 @@ function get_sync_status {
   fi
 
   # sync requires the package directory to exist
-  [ ! -d ${WORKING_DIR}/${KP_NAME} ] && return 0
+  [ ! -d ${WORKING_PACKAGES_DIR}/${KP_NAME} ] && return 0
 
   KP_SYNC_STATE="A"
 
   # sync requires the package upstream directory to sync
-  [ ! -d ${WORKING_DIR}/${KP_NAME}/upstream ] && return 0
+  [ ! -d ${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream ] && return 0
 
-  pushd "${WORKING_DIR}/${KP_NAME}/upstream" >/dev/null
+  pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" >/dev/null
 
   # assume modified unless proven in sync
   KP_UPSTREAM_SYNC_STATE="M"
