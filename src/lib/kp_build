@@ -21,6 +21,10 @@
 #
 OPT_VERBOSE=
 
+dist=fedora
+releasever=17
+basearch=x86_64
+
 
 #
 # FUNCTIONS
@@ -106,25 +110,53 @@ function check_upstream {
   fi
 }
 
+function initialise_mock {
+  _debug "Initialising mock build environment.."
+  mock --root $dist-$releasever-$basearch --clean
+  mock --root $dist-$releasever-$basearch --init
+}
+
 function generate_spec {
-  echo "generate_spec"
+  cd ${WORKING_PACKAGES_DIR}/$KP_NAME/build/
+  echo -e "\n\ngenerate_spec from template, sed stuff, etc"
+  cd -
 }
 
 function gather_source {
-  echo "gather_source"
+  _debug "Gathering source..."
+  cd ${WORKING_PACKAGES_DIR}/$KP_NAME/build/
+  case ${KP_UPSTREAM_SRC_TYPE} in
+  binary)
+    spectool -g $KP_NAME.spec
+    ;;
+  esac
   #am i local repo?
   #  git archive sha hash
   #am I spec file tarball?
   #do I have any patches
-  echo "copy spec, source tarball and patches to ~/rpmbuild/"
-  echo "(we might have patches from upstream, or patches from git repo, need source tarball)"
+  #echo "(we might have patches from upstream, or patches from git repo, need source tarball)"
+  cd -
 }
 
 function mock_build {
-  echo "mock_build"
-  echo "mock --buildsrpm"
-  echo "mock"
-  echo "copy resulting rpms to ${WORKING_PACKAGES_DIR}/$KP_NAME/release/"
+  cd ${WORKING_PACKAGES_DIR}/$KP_NAME/build/
+
+  _debug "Building source package, please wait.."
+  mock --root $dist-$releasever-$basearch --buildsrpm --spec $KP_NAME.spec --sources . || _error "Could not create source package, skipping package"
+
+  _debug "Building package, please wait.."
+  # --no-clean because we have srpm in there, else need to copy out (and build should be clean anyway)
+  mock --no-clean --root $dist-$releasever-$basearch --rebuild /var/lib/mock/$dist-$releasever-$basearch/result/$(basename $(grep ^Wrote /var/lib/mock/$dist-$releasever-$basearch/result/build.log |grep src.rpm |awk {'print $2'} |uniq)) || _error "Could not build package, skipping"
+
+  cd -
+  _debug "Copying packages to ${WORKING_PACKAGES_DIR}/$KP_NAME/release/"
+  mkdir -p ${WORKING_PACKAGES_DIR}/$KP_NAME/release
+  for x in $(grep ^Wrote /var/lib/mock/$dist-$releasever-$basearch/result/build.log |awk {'print $2'} |uniq)
+  do
+    x=$(basename $x)
+    cp -f /var/lib/mock/$dist-$releasever-$basearch/result/$x ${WORKING_PACKAGES_DIR}/$KP_NAME/release/
+  done
+  cd -
 }
 
 #
@@ -132,6 +164,9 @@ function mock_build {
 #
 
 function main {
+  #create rpmbuild env
+#  rpmdev-setuptree || _error "Could not create rpmbuild environment, exiting" ; exit 1
+
   # load the configuration
   for F in $(list_config_available)
   do
@@ -153,9 +188,16 @@ function main {
     echo "KP_RELEASE_GIT_COMMIT = $KP_RELEASE_GIT_COMMIT"
 
     echo ${CMD_LINE}
-    [ -d ${WORKING_PACKAGES_DIR}/$KP_NAME ] || _error "No checkout done, skipping" ; continue
+
+    if [ ! -d ${WORKING_PACKAGES_DIR}/$KP_NAME ]
+    then
+       # || _error "No checkout done, skipping" ; continue
+       _error "No checkout done, skipping" ; continue
+    fi
 
     [ "${KP_UPSTREAM_SRC_TYPE}" == upstream ] && check_upstream ${F}
+
+    initialise_mock
     generate_spec ${F}
     gather_source ${F}
     mock_build ${F}

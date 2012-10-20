@@ -253,7 +253,7 @@ function package_checkout {
 
   _debug "Creating package path: ${_WORKING_PATH}"
 
-  if ! mkdir ${_WORKING_PATH}
+  if ! mkdir -p ${_WORKING_PATH}
   then
     _error "Unable to create package path: ${_WORKING_PATH}"
     return 1
