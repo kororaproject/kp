@@ -2,15 +2,25 @@
 # To use this for 32bit build, :4,$s/x86_64/i386/g
 # and build with 'setarch i686 livecd-creator ...'
 
+#
+# KP:DESCRIPTION:START
+#
+# var KP_RELEASE_META_LABEL=gnome
+#
+#
+# KP:DESCRIPTION:END
+#
 
-%include %%KICKSTART_DIR%%/fedora-live-base.ks
+
+
+%include %%KP_KICKSTART_DIR%%/fedora-live-base.ks
 
 #version=DEVEL
 install
 
 #install system from the net, to get latest updates
-#url --url=ftp://mirror.internode.on.net/pub/fedora/linux/releases/17/Fedora/x86_64/os/
-url --url=ftp://mirror.internode.on.net/pub/fedora/linux/development/17/x86_64/os/
+#url --url=ftp://mirror.internode.on.net/pub/fedora/linux/releases/%%KP_VERSION%%/Fedora/x86_64/os/
+url --url=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/
 
 lang en_AU.UTF-8
 keyboard us
@@ -39,19 +49,19 @@ part / --size 7178 --fstype ext4
 #bootloader --location=mbr --driveorder=sda --append="rhgb quiet"
 
 #Repos
-repo --name="Adobe Systems Incorporated" --baseurl=http://linuxdownload.adobe.com/linux/x86_64/ --cost=1000
-repo --name="Fedora 17 - x86_64" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/releases/17/Everything/x86_64/os/ --cost=1000
-#repo --name="Fedora 17 - x86_64 - Updates" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/updates/17/x86_64/ --cost=1000
-repo --name="Fedora 17 - x86_64 - Updates" --baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/17/x86_64/ --cost=1000
-repo --name="Google Chrome" --baseurl=http://dl.google.com/linux/chrome/rpm/stable/x86_64/ --cost=1000
-repo --name="Kororaa" --baseurl=file:///home/chris/repos/kororaa/releases/17/x86_64/ --cost=10
-#repo --name="Kororaa Testing" --baseurl=file:///home/chris/repos/kororaa/testing/17/x86_64/ --cost=5
-#repo --name="Ksplice Uptrack for Fedora" --baseurl=http://www.ksplice.com/yum/uptrack/fedora/17/x86_64/ --cost=1000
-repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/releases/17/Everything/x86_64/os/ --cost=1000
-repo --name="RPMFusion Free - Updates" --baseurl=http://download1.rpmfusion.org/free/fedora/updates/17/x86_64/ --cost=1000
-repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/releases/17/Everything/x86_64/os/ --cost=1000
-repo --name="RPMFusion Non-Free - Updates" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/updates/17/x86_64/ --cost=1000
-repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/17/x86_64/ --cost=1000
+repo --name="Adobe Systems Incorporated" --baseurl=http://linuxdownload.adobe.com/linux/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%%" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Google Chrome" --baseurl=http://dl.google.com/linux/chrome/rpm/stable/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Korora %%KP_VERSION%%" --baseurl=file://%%KP_REPOSITORY_DIR%%/ --cost=10
+#repo --name="Kororaa Testing" --baseurl=file:///home/chris/repos/kororaa/testing/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=5
+#repo --name="Ksplice Uptrack for Fedora" --baseurl=http://www.ksplice.com/yum/uptrack/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+repo --name="RPMFusion Free - Updates" --baseurl=http://download1.rpmfusion.org/free/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+repo --name="RPMFusion Non-Free - Updates" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
 
 %packages
 @admin-tools
@@ -363,7 +373,7 @@ echo "****BUILDING AKMODS****"
 /usr/sbin/akmods --force
 
 #Import keys
-for x in fedora kororaa adobe-linux rpmfusion-free-fedora-16-primary rpmfusion-nonfree-fedora-16-primary rpmfusion-free-fedora-17-primary rpmfusion-nonfree-fedora-17-primary ; do rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-$x ; done
+for x in fedora kororaa adobe-linux rpmfusion-free-fedora-16-primary rpmfusion-nonfree-fedora-16-primary rpmfusion-free-fedora-%%KP_VERSION%%-primary rpmfusion-nonfree-fedora-%%KP_VERSION%%-primary ; do rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-$x ; done
 #Chrome (this should prob just go in the repo file instead)
 wget https://dl-ssl.google.com/linux/linux_signing_key.pub
 rpm --import linux_signing_key.pub
