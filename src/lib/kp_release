@@ -25,9 +25,29 @@ OPT_USB=
 OPT_ISO=1
 
 
+OPT_RELEASE_VERSION=17
+OPT_RELEASE_CODENAME="Bubbles"
+OPT_RELEASE_BASEARCH="x86_64"
+
+#
+# PRIVATE FUNCTIONS
+#
+
+function _template_inflate {
+  _IN_FILE=${1}
+  _OUT_FILE=${2}
+
+  # substitute variables
+  sed -i "s@%%KP_KICKSTART_DIR%%@${CONFIG_DIR}/kickstart.d@g" ${_IN_FILE}
+  sed -i "s@%%KP_REPOSITORY_DIR%%@${WORKING_DIR}/repository@g" ${_IN_FILE}
+  sed -i "s@%%KP_BASEARCH%%@${OPT_RELEASE_BASEARCH}@g" ${_IN_FILE}
+  sed -i "s@%%KP_VERSION%%@${OPT_RELEASE_VERSION}@g" ${_IN_FILE}
+}
+
 #
 # FUNCTIONS
 #
+
 function usage {
   _EXIT_VAL=${1:-0}
 
@@ -35,18 +55,22 @@ function usage {
 Usage: $0 release [options]
 
 Options:
-  -l,  List available kickstarts to build
+  -l   List available kickstarts to build
+  -t   Set the release title
+  -r   Set the release version
+  -n   Set the release codename
   -v   Show verbose output
   -?   Show this usage
   -V   Show version
 
 Long Options:
-  --list        Same as -l
-  --iso         Build an ISO image [default]
-  --usb         Build a USB image
-  --verbose     Same as -v
-  --help        Same as -?
-  --version     Same as -V
+  --list              Same as -l
+  --release-title     Same as -t
+  --release-version   Same as -r
+  --release-codename  Same as -n
+  --verbose           Same as -v
+  --help              Same as -?
+  --version           Same as -V
 
 EOF
 
@@ -69,14 +93,6 @@ function parse_args {
       -l|--list)
         OPT_LIST=1
         ;;
-      --iso)
-        OPT_ISO=1
-        OPT_USB=
-        ;;
-      --usb)
-        OPT_ISO=
-        OPT_USB=1
-        ;;
       -v|--verbose)
         OPT_VERBOSE=1
         ;;
@@ -98,6 +114,19 @@ function parse_args {
     esac
     shift
   done
+
+  # remaining arguments are releases
+  RELEASES=
+  if [ $# -eq 0 ]
+  then
+    echo "Building all releases ..."
+  else
+    while [ $# -gt 0 ]
+    do
+      RELEASES="${RELEASES} $1"
+      shift
+    done
+  fi
 }
 
 
@@ -106,36 +135,40 @@ function parse_args {
 #
 
 function main {
-  _info "Initialising Korora Package environment ..."
-
-  # convert working dir is absolute path
-  WORKING_DIR=$(readlink -e "${WORKING_DIR}")
-
-  # create working directory
-  _info "Preparing: ${WORKING_DIR}"
-
-  if [ ! -d "${WORKING_DIR}" ]
+  # check if we're listing
+  if [ -n "${OPT_LIST}" ]
   then
-    _info "Creating ..."
-    mkdir -p "${WORKING_DIR}/"
-  elif [ -n "${OPT_FORCE}" ]
-  then
-    _info "Already exists. Forcing clean ..."
+    _info "Korora Releases:"
+    for L in $(list_kickstart_available)
+    do
+      _info "  - ${L}"
 
-    rm -rf "${WORKING_DIR}/*"
+    done
+  # otherwise we must be building
   else
-    _info "Already exists."
-  fi
 
-  if [ -w "${WORKING_DIR}" ]
-  then
-    # show disk usage of working dir
-    _DISK_AVAILABLE=$(df -h ${WORKING_DIR} | tail -n 1 | awk '{print $4}')
-    _DISK_USAGE=$(du -sh ${WORKING_DIR} | cut -f1)
+    # convert working dir is absolute path
+    RELEASE_DIR="${WORKING_DIR}/releases"
 
-    _info "${_DISK_USAGE}B used - ${_DISK_AVAILABLE}B remaining"
-  else
-    _error "Directory is not writable."
+    for R in $(list_kickstart_available "${RELEASES}")
+    do
+
+      # we must be building then
+      _info "Preparing to build: $R"
+      _info "  - Codename:     ${OPT_RELEASE_CODENAME}"
+      _info "  - Version:      ${OPT_RELEASE_VERSION}"
+      _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
+
+
+      # create working directory
+      _info "Preparing release template: ${WORKING_DIR}"
+
+      cp "${CONFIG_DIR}/kickstart.d/${R}.ks" "/tmp/${R}"
+      _template_inflate "/tmp/${R}"
+
+      # create the CD
+      livecd-creator --config="/tmp/${R}" --fslabel="korora-${OPT_RELEASE_VERSION}-live" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --verbose --cache=${WORKING_DIR}/livecd -t ${WORKING_DIR}/tmp
+    done
   fi
 }
 

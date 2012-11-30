@@ -26,6 +26,7 @@ VERSION="0.1.0"
 [[ -z ${LIB_DIR} || ! -d ${LIB_DIR} ]] && LIB_DIR="/usr/share/lib/kp/lib"
 [[ -z ${WORKING_DIR} || ! -d ${WORKING_DIR} ]] && WORKING_DIR="/var/lib/kp"
 [[ -z ${RELEASE_DIR} || ! -d ${RELEASE_DIR} ]] && RELEASE_DIR="/tmp"
+[[ -z ${LOG_DIR} || ! -d ${LOG_DIR} ]] && LOG_DIR="/usr/share/lib/kp/log"
 
 #
 # INCLUDES
@@ -46,6 +47,20 @@ then
 else
   source ${LIB_DIR}/kp_core
 fi
+
+if [ ! -d "${LOG_DIR}" ]
+then
+  echo "FATAL: Invalid LOG_DIR defined."
+  exit 1
+fi
+
+
+# expand directories to absolute paths
+WORKING_DIR=$(readlink -e "${WORKING_DIR}")
+LIB_DIR=$(readlink -e "${LIB_DIR}")
+LOG_DIR=$(readlink -e "${LOG_DIR}")
+CONFIG_DIR=$(readlink -e "${CONFIG_DIR}")
+
 
 # build working subdirectories
 WORKING_PACKAGES_DIR="${WORKING_DIR}/packages"
@@ -90,6 +105,13 @@ case ${SUB_COMMAND} in
   default)
     ;;
 esac
+
+NOW=$(date +'%s')
+NOW_LITERAL=$(date '+%Y-%m-%d %H:%M:%S')
+
+LOG_FILE="${LOG_DIR}/kp-${SUB_COMMAND}-${NOW}.log"
+touch $LOG_FILE
+_log "Logging started: ${NOW_LITERAL}"
 
 # start the main function sourced above
 parse_args $@

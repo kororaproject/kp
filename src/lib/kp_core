@@ -40,22 +40,46 @@ function version {
 # PRINT HANDLING
 #
 
+function _log {
+  _MSG=${1:-""}
+
+  if [ -w "${LOG_FILE}" ]
+  then
+    echo "L: ${_MSG}" >> ${LOG_FILE}
+  fi
+}
+
 function _error {
   _MSG=${1:-""}
 
-  echo "E: ${_MSG}" >&2
+  echo "${_MSG}" >&2
+
+  if [ -w "${LOG_FILE}" ]
+  then
+    echo "E: ${_MSG}" >> ${LOG_FILE}
+  fi
 }
 
 function _warn {
   _MSG=${1:-""}
 
-  echo "W: ${_MSG}" >&2
+  echo "${_MSG}" >&2
+
+  if [ -w "${LOG_FILE}" ]
+  then
+    echo "W: ${_MSG}" >> ${LOG_FILE}
+  fi
 }
 
 function _info {
   _MSG=${1:-""}
 
-  echo "I: ${_MSG}" >&2
+  echo "${_MSG}" >&2
+
+  if [ -w "${LOG_FILE}" ]
+  then
+    echo "I: ${_MSG}" >> ${LOG_FILE}
+  fi
 }
 
 function _debug {
@@ -63,7 +87,12 @@ function _debug {
 
   [ -z "${DEBUG}" ] && return 0
 
-  echo "D: ${_MSG}" >&2
+  echo "${_MSG}" >&2
+
+  if [ -w "${LOG_FILE}" ]
+  then
+    echo "D: ${_MSG}" >> ${LOG_FILE}
+  fi
 }
 
 #
@@ -76,7 +105,6 @@ function reset_config_variables {
   KP_URL=
   KP_UPSTREAM_SRC_TYPE=
   KP_UPSTREAM_SRC_GIT_URL=
-  KP_UPSTREAM_SRC_GIT_BRANCH=
   KP_UPSTREAM_SRC_GIT_COMMIT=
   KP_UPSTREAM_SRC_SVN_URL=
   KP_UPSTREAM_SRC_SVN_REVISION=
@@ -123,12 +151,34 @@ function load_config {
   return 1
 }
 
+#
+# string list_config_available(string packages)
+#
+# Returns a list of avilable Korora packages. An optional argument "package" can
+# be supplied to filter the list.
+#
+# Note: assumes the package config has been sourced
+#
+
 function list_config_available {
-  _FILES=""
+  _PACKAGES=${1:-}
+  _FILES=
+
   for C in $(ls -1 ${CONFIG_DIR}/packages.d/kp-*.conf)
   do
     _FILE=$(basename $C)
-    _FILES="${_FILES} ${_FILE%.*}"
+    _FILE=${_FILE%.*}
+
+    load_config ${_FILE}
+    [ ${?} -ne 0 ] && continue
+
+    # skip if this is not requested
+    if [ -n "${_PACKAGES}" ]
+    then
+      echo ${_PACKAGES} | grep -q ${KP_NAME} || continue
+    fi
+
+    _FILES="${_FILES} ${_FILE}"
   done
 
   echo ${_FILES}
@@ -154,6 +204,38 @@ function print_config_details {
   return ${_RET}
 }
 
+#
+# KICKSTART HANDLING FUNCTIONS
+#
+
+
+#
+# string list_kickstart_available(string kickstarts)
+#
+# Returns a list of avilable Korora kickstart files. An optional argument "kickstarts" can
+# be supplied to filter the list.
+#
+
+function list_kickstart_available {
+  _KICKSTARTS=${1:-}
+  _FILES=
+
+  for K in $(ls -1 ${CONFIG_DIR}/kickstart.d/*.ks)
+  do
+    _FILE=$(basename $K)
+    _FILE=${_FILE%.ks}
+
+    # skip if this is not requested
+    if [ -n "${_KICKSTARTS}" ]
+    then
+      echo ${_KICKSTARTS} | grep -q ${_FILE} || continue
+    fi
+
+    _FILES="${_FILES} ${_FILE}"
+  done
+
+  echo ${_FILES}
+}
 
 
 #
@@ -161,7 +243,7 @@ function print_config_details {
 #
 
 #
-# package_upstream_checkout(void)
+# int package_upstream_checkout(void)
 #
 # Performs a checkout of a Korora package's upstream into respective upstream
 # package directory.
@@ -229,7 +311,7 @@ function package_upstream_checkout {
 }
 
 #
-# package_checkout(void)
+# int package_checkout(void)
 #
 # Performs a checkout of a Korora package into the working directory.
 #
