@@ -128,7 +128,7 @@ function main {
 }
 
 function create_dirs {
-  for d in packages repository kickstart release
+  for d in packages repository kickstart release release/cache release/tmp
   do
     _info " - Creating $d"
     mkdir -p "${WORKING_DIR}/$d" || _warn "Unable to create."
