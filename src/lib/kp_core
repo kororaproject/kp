@@ -96,6 +96,25 @@ function _debug {
 }
 
 #
+# DIRECTORY HANDLING FUNCTIONS
+#
+function _pushd {
+  _DIR=${1:-}
+
+  # ensure directory exists
+  [ -d "${_DIR}" ] || return 1
+
+  # suppress pushd output
+  pushd "${_DIR}" >/dev/null 2>&1
+}
+
+function _popd {
+  # suppress pushd output
+  popd >/dev/null 2>&1
+}
+
+
+#
 # CONFIG HANDLING FUNCTIONS
 #
 
