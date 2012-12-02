@@ -146,28 +146,37 @@ function main {
     done
   # otherwise we must be building
   else
+    _VERBOSE=
 
-    # convert working dir is absolute path
-    RELEASE_DIR="${WORKING_DIR}/releases"
+    if [ ${OPT_VERBOSE} -eq 1 ]
+    then
+      _VERBOSE="--version"
+    fi
 
+    # build all requested releases
     for R in $(list_kickstart_available "${RELEASES}")
     do
 
-      # we must be building then
+      #
       _info "Preparing to build: $R"
       _info "  - Codename:     ${OPT_RELEASE_CODENAME}"
       _info "  - Version:      ${OPT_RELEASE_VERSION}"
       _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
 
-
       # create working directory
       _info "Preparing release template: ${WORKING_DIR}"
 
-      cp "${CONFIG_DIR}/kickstart.d/${R}.ks" "/tmp/${R}"
-      _template_inflate "/tmp/${R}"
+      _TEMPLATE="/tmp/${R}.${RANDOM}"
+
+      #
+      cp "${CONFIG_DIR}/kickstart.d/${R}.ks" "${_TEMPLATE}"
+      _template_inflate "${_TEMPLATE}"
 
       # create the CD
-      livecd-creator --config="/tmp/${R}" --fslabel="korora-${OPT_RELEASE_VERSION}-live" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --verbose --cache=${WORKING_DIR}/livecd -t ${WORKING_DIR}/tmp
+      livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="korora-${OPT_RELEASE_VERSION}-live" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" -cache=${WORKING_RELEASE_CACHE_DIR} --tmpdir ${WORKING_RELEASE_TMP_DIR}
+
+      # clean up our inflated template file
+      rm -f "${_TEMPLATE}"
     done
   fi
 }
