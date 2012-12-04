@@ -17,19 +17,183 @@
 #
 
 #
-# BUILD
+# INITIALISE
 #
 OPT_VERBOSE=
 OPT_MOCK_CLEAN=
+OPT_MOCK_CLEAN_EACH=
 
 OPT_DIST=fedora
 OPT_RELEASEVER=17
 OPT_BASEARCH=x86_64
 
+#
+# BUILD HELPERS
+#
+
+# forward declared helper functions should be overridden when a helper exists
+function build_pre_init {
+  true
+}
+
+function build_pre_fetch {
+  true
+}
+
+function build_pre_build {
+  true
+}
+
+function build_post_build {
+  true
+}
+
+#
+# PRIVATE FUNCTIONS
+#
+
+function _template_inflate {
+  _OUT_FILE=${1:-}
+  _IN_FILE=${2:-}
+
+  if [ -f "${_IN_FILE}" ]
+  then
+    cp "${_IN_FILE}" "${_OUT_FILE}" || return 1
+  fi
+
+  # substitute variables
+  sed -i "s@%%KP_PATCHES%%@${_PATCH_FILES}@g" ${_OUT_FILE}
+  sed -i "s@%%KP_PATCHES_APPLY%%@${_PATCH_FILES_APPLY}@g" ${_OUT_FILE}
+
+  sed -i "s@%%KP_BASEARCH%%@${OPT_BASEARCH}@g" ${_OUT_FILE}
+  sed -i "s@%%KP_VERSION%%@${KP_VERSION}@g" ${_OUT_FILE}
+  sed -i "s@%%KP_RELEASE%%@${KP_RELEASE}@g" ${_OUT_FILE}
+}
+
+function check_upstream {
+  echo "check_upstream"
+  if [ -d "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" ]
+  then
+    echo "do git rebase stuff"
+    echo "copy patches to  ${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
+  fi
+}
+
+function initialise_mock {
+  _debug "Initialising mock build environment.."
+  mock --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --clean
+  mock --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --init
+  _MOCK_CLEAN=1
+}
+
+function generate_spec {
+  _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/"
+
+  # calculate patch list
+  _PATCH_FILES=
+  _PATCH_FILES_APPLY=
+  _PATCH_COUNT=0
+
+  for F in $(ls -1 sources/*.patch)
+  do
+    F=$(basename ${F})
+    _PATCH_FILES="${_PATCH_FILES}Patch${_PATCH_COUNT}: ${F}\n"
+    _PATCH_FILES_APPLY="${_PATCH_FILES_APPLY}%patch${_PATCH_COUNT} -p1\n"
+    let "_PATCH_COUNT+=1"
+  done
+
+  # ensure sources directory exists
+  [ -d "sources" ] || mkdir "sources"
+
+  if [ "${KP_BUILD_SPEC:(-9)}" == ".template" ]
+  then
+    _BUILD_SPEC_TEMPLATE="${KP_BUILD_SPEC}"
+    _BUILD_SPEC="${_BUILD_SPEC_TEMPLATE/.template/}"
+
+    _info "Inflating spec file ..."
+
+    _template_inflate "${_BUILD_SPEC}" "${_BUILD_SPEC_TEMPLATE}"
+  else
+    _BUILD_SPEC="${KP_BUILD_SPEC}"
+  fi
+  _popd
+}
+
+function gather_source {
+  _debug "Gathering source ..."
+  case ${KP_UPSTREAM_SRC_TYPE} in
+    binary)
+      spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
+      ;;
+    git)
+      # check upstream exists (required)
+      if [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" ]
+      then
+        _error "The package has not been checked out."
+        return 1
+      fi
+      ;;
+    local)
+      # is alwasy a git repo
+      _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream"
+
+      _debug "Creating (local) tarball source ..."
+      git archive --format=tar.gz --prefix="${KP_NAME}-${KP_VERSION}/" -o "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/${KP_NAME}-${KP_VERSION}.tar.gz" HEAD
+
+      _popd
+      ;;
+  esac
+  #am i local repo?
+  #  git archive sha hash
+  #am I spec file tarball?
+  #do I have any patches
+  #echo "(we might have patches from upstream, or patches from git repo, need source tarball)"
+}
+
+function mock_build {
+  _pushd "${WORKING_PACKAGES_DIR}/$KP_NAME/build/"
+
+  [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
+
+  _debug "Building source package, please wait ..."
+  mock ${_VERBOSE} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --buildsrpm --spec "${_BUILD_SPEC}" --sources sources/
+  _MOCK_RET=${?}
+
+  _MOCK_CLEAN=
+
+  if [ ${_MOCK_RET} -ne 0 ]
+  then
+    _error "Could not create source package, skipping package"
+    return 1
+  fi
+
+  _debug "Building package, please wait ..."
+  # --no-clean because we have srpm in there, else need to copy out (and build should be clean anyway)
+  mock ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $(grep ^Wrote /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |grep src.rpm |awk {'print $2'} |uniq))
+  _MOCK_RET=${?}
+
+  _popd
+
+  if [ ${_MOCK_RET} -ne 0 ]
+  then
+    _error "Could not build package, skipping"
+    return 1
+  fi
+
+  _pushd "${WORKING_REPOSITORY_DIR}"
+  _debug "Copying packages to: ${WORKING_REPOSITORY_DIR}"
+  for x in $(grep ^Wrote /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |awk {'print $2'} |uniq)
+  do
+    x=$(basename $x)
+    cp -f /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $x) .
+  done
+  _popd
+}
 
 #
 # FUNCTIONS
 #
+
 function usage {
   _EXIT_VAL=${1:-0}
 
@@ -40,19 +204,21 @@ function usage {
     -a   Set base architecture
     -d   Set distribution
     -r   Set release version
-    -x   Initialise mock to a clean state.
+    -x   Initialise mock to a clean state before building all packages
+    -X   Initialise mock to a clean state before building each package
     -v   Show verbose output
     -?   Show this usage
     -V   Show version
 
   Long Options:
-    --arch          Same as -a
-    --distribution  Same as -d
-    --releasever    Same as -r
-    --clean         Same as -x
-    --verbose       Same as -v
-    --help          Same as -?
-    --version       Same as -V
+    --arch                  Same as -a
+    --distribution          Same as -d
+    --releasever            Same as -r
+    --clean                 Same as -x
+    --clean-each-package    Same as -X
+    --verbose               Same as -v
+    --help                  Same as -?
+    --version               Same as -V
 
 EOF
 
@@ -64,7 +230,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="arch distribution releasever clean verbose version help" "a d r x v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="arch distribution releasever clean clean-each-package verbose version help" "a d r x X v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -80,6 +246,9 @@ function parse_args {
         ;;
       -x|--clean)
         OPT_MOCK_CLEAN=1
+        ;;
+      -x|--clean)
+        OPT_MOCK_CLEAN_EACH=1
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -115,79 +284,6 @@ function parse_args {
       shift
     done
   fi
-
-  echo "PACKAGES INIT = $PACKAGES"
-}
-
-function check_upstream {
-  echo "check_upstream"
-  if [ -d ${WORKING_PACKAGES_DIR}/$KP_NAME/upstream ]
-  then
-    echo "do git rebase stuff"
-    echo "copy patches to  ${WORKING_PACKAGES_DIR}/$KP_NAME/build/sources/"
-  fi
-}
-
-function initialise_mock {
-  _debug "Initialising mock build environment.."
-  mock --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --clean
-  mock --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --init
-}
-
-function generate_spec {
-  _pushd ${WORKING_PACKAGES_DIR}/$KP_NAME/build/
-  echo -e "\n\ngenerate_spec from template, sed stuff, etc"
-  _popd
-}
-
-function gather_source {
-  _debug "Gathering source..."
-  case ${KP_UPSTREAM_SRC_TYPE} in
-    binary)
-#      _pushd ${WORKING_PACKAGES_DIR}/$KP_NAME/build/
-      spectool -g $KP_NAME.spec -C "${WORKING_PACKAGES_DIR}/$KP_NAME/build/"
-#      _popd
-      ;;
-    git)
-      ;;
-    local)
-      # is alwasy a git repo
-      _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream"
-
-      _debug "Creating (local) tarball source ..."
-      git archive --format=tar.gz --prefix="${KP_NAME}-${KP_VERSION}/" -o "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${KP_NAME}-${KP_VERSION}.tar.gz" HEAD
-
-      _popd
-      ;;
-  esac
-  #am i local repo?
-  #  git archive sha hash
-  #am I spec file tarball?
-  #do I have any patches
-  #echo "(we might have patches from upstream, or patches from git repo, need source tarball)"
-}
-
-function mock_build {
-  _pushd ${WORKING_PACKAGES_DIR}/$KP_NAME/build/
-
-  [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
-
-  _debug "Building source package, please wait.."
-  mock ${_VERBOSE} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --buildsrpm --spec $KP_NAME.spec --sources . || _error "Could not create source package, skipping package"
-
-  _debug "Building package, please wait.."
-  # --no-clean because we have srpm in there, else need to copy out (and build should be clean anyway)
-  mock ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $(grep ^Wrote /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |grep src.rpm |awk {'print $2'} |uniq)) || _error "Could not build package, skipping"
-  _popd
-
-  _pushd "${WORKING_REPOSITORY_DIR}"
-  _debug "Copying packages to: ${WORKING_REPOSITORY_DIR}"
-  for x in $(grep ^Wrote /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |awk {'print $2'} |uniq)
-  do
-    x=$(basename $x)
-    cp -f /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $x) .
-  done
-  _popd
 }
 
 #
@@ -195,8 +291,7 @@ function mock_build {
 #
 
 function main {
-  #create rpmbuild env
-#  rpmdev-setuptree || _error "Could not create rpmbuild environment, exiting" ; exit 1
+  _PACKAGE_BUILT=
 
   if [ ! -z ${OPT_MOCK_CLEAN} ]
   then
@@ -204,41 +299,55 @@ function main {
   fi
 
   # load the configuration
-  for F in $(list_config_available)
+  for F in $(list_config_available "${PACKAGES}")
   do
     load_config ${F}
     [ ${?} -ne 0 ] && continue
 
-    # skip if this is not requested
-    if [ -n "${PACKAGES}" ]
+    if [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}" ]
     then
-      echo ${PACKAGES} | grep -q ${KP_NAME} || continue
+      _error "Package is not checked out, skipping"
+      continue
     fi
 
-    echo "KP_NAME = $KP_NAME"
-    echo "KP_VERSION = $KP_VERSION"
-    echo "KP_URL = $KP_URL"
-    echo "KP_UPSTREAM_SRC_TYPE = $KP_UPSTREAM_SRC_TYPE"
-    echo "KP_UPSTREAM_SRC_URL = $KP_UPSTREAM_SRC_URL"
-    echo "BUILD_SPEC = $BUILD_SPEC"
-    echo "KP_RELEASE_GIT_COMMIT = $KP_RELEASE_GIT_COMMIT"
-
-    echo ${CMD_LINE}
-
-    if [ ! -d "${WORKING_PACKAGES_DIR}/$KP_NAME" ]
+    if [ ! -z ${OPT_MOCK_CLEAN_EACH} -a -z ${_MOCK_CLEAN} ]
     then
-      _error "No checkout done, skipping"
-      continue
+      initialise_mock
     fi
 
     [ "${KP_UPSTREAM_SRC_TYPE}" == "upstream" ] && check_upstream ${F}
 
-    generate_spec ${F}
-    gather_source ${F}
-    mock_build ${F}
+    # source the build helper if it exists
+    if [ -r "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/build.helper" ]
+    then
+      source "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/build.helper"
+    elif [ "${KP_UPSTREAM_SRC_TYPE}" == "git" ]
+    then
+      _warn "This is a \"git\" upstream package. Due to SPEC file limitations it is strongly recommended that a build.helper be implemented for this package."
+    fi
+
+    build_pre_init || continue
+
+    generate_spec ${F} || continue
+
+    build_pre_fetch || continue
+
+    gather_source ${F} || continue
+
+    build_pre_build || continue
+
+    mock_build ${F} || continue
+
+    build_post_build || continue
+
+    _PACKAGE_BUILT=1
+
   done
 
   # rebuild the repository directory
-  [ -z ${OPT_VERBOSE} ] &&  _VERBOSE= || _VERBOSE="-v"
-  createrepo ${_VERBOSE} "${WORKING_REPOSITORY_DIR}"
+  if [ ! -z "${_PACKAGE_BUILT}" ]
+  then
+    [ -z ${OPT_VERBOSE} ] &&  _VERBOSE= || _VERBOSE="-v"
+    createrepo ${_VERBOSE} "${WORKING_REPOSITORY_DIR}"
+  fi
 }
