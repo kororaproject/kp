@@ -19,6 +19,49 @@
 VERSION="0.1.0"
 
 #
+# PRE-INIT
+#
+SUB_COMMAND=
+CONFIG_FILE=
+
+# assume first parameter to be the subcommand
+while [ $# -gt 0 ] && [ -z ${SUB_COMMAND} ]
+do
+  case "$1" in
+    init|--init)
+      SUB_COMMAND=init
+      ;;
+    list|--list)
+      SUB_COMMAND=list
+      ;;
+    build|--build)
+      SUB_COMMAND=build
+      ;;
+    sync|--sync)
+      SUB_COMMAND=sync
+      ;;
+    checkout|--checkout)
+      SUB_COMMAND=checkout
+      ;;
+    release|--release)
+      SUB_COMMAND=relese
+      ;;
+    --config*)
+      if [ ${#1} -eq 8 ]
+      then
+        CONFIG_FILE=$2
+        shift
+      else
+        CONFIG_FILE="${1/--config=/}"
+      fi
+      ;;
+    default)
+      ;;
+  esac
+  shift
+done
+
+#
 # DEFAULTS
 #
 
@@ -27,17 +70,18 @@ VERSION="0.1.0"
 [[ -z ${WORKING_DIR} || ! -d ${WORKING_DIR} ]] && WORKING_DIR="/var/lib/kp"
 [[ -z ${RELEASE_DIR} || ! -d ${RELEASE_DIR} ]] && RELEASE_DIR="/tmp"
 [[ -z ${LOG_DIR} || ! -d ${LOG_DIR} ]] && LOG_DIR="/usr/share/lib/kp/log"
+[[ -z ${CONFIG_FILE} || ! -f ${CONFIG_FILE} ]] && CONFIG_FILE="${CONFIG_DIR}/kp.conf"
 
 #
 # INCLUDES
 #
 
-if [ ! -r "${CONFIG_DIR}/kp.conf" ]
+if [ ! -r "${CONFIG_FILE}" ]
 then
   echo "FATAL: No configuration file found."
   exit 1
 else
-  source ${CONFIG_DIR}/kp.conf
+  source "${CONFIG_FILE}"
 fi
 
 if [ ! -d "${LIB_DIR}" ]
@@ -82,31 +126,7 @@ DEBUG=1
 
 CALL_PATH=$(dirname $0)
 
-# assume first parameter to be the subcommand
-SUB_COMMAND=$1; shift
-
-case ${SUB_COMMAND} in
-   init)
-     source ${LIB_DIR}/kp_init $@
-     ;;
-   list)
-     source ${LIB_DIR}/kp_list $@
-     ;;
-   build)
-     source ${LIB_DIR}/kp_build $@
-     ;;
-   sync)
-     source ${LIB_DIR}/kp_sync $@
-     ;;
-   checkout)
-     source ${LIB_DIR}/kp_checkout $@
-     ;;
-   release)
-     source ${LIB_DIR}/kp_release $@
-     ;;
-  default)
-    ;;
-esac
+source "${LIB_DIR}/kp_${SUB_COMMAND}" $@
 
 NOW=$(date +'%s')
 NOW_LITERAL=$(date '+%Y-%m-%d %H:%M:%S')
