@@ -406,10 +406,10 @@ function get_sync_status {
   # sync requires the package directory to exist
   [ ! -d ${WORKING_PACKAGES_DIR}/${KP_NAME} ] && return 0
 
-  KP_SYNC_STATE="A"
+  KP_PACKAGE_SYNC_STATE="A"
 
   # sync requires the package upstream directory to sync
-  [ ! -d ${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream ] && return 0
+  [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" ] && return 0
 
   pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" >/dev/null
 
