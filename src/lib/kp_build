@@ -94,7 +94,7 @@ function generate_spec {
   _PATCH_FILES_APPLY=
   _PATCH_COUNT=0
 
-  for F in $(ls -1 sources/*.patch)
+  for F in $(ls -1 sources/*.patch 2>/dev/null)
   do
     F=$(basename ${F})
     _PATCH_FILES="${_PATCH_FILES}Patch${_PATCH_COUNT}: ${F}\n"
@@ -123,6 +123,7 @@ function gather_source {
   _debug "Gathering source ..."
   case ${KP_UPSTREAM_SRC_TYPE} in
     binary)
+      echo spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
       spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
       ;;
     git)
@@ -134,13 +135,18 @@ function gather_source {
       fi
       ;;
     local)
-      # is alwasy a git repo
-      _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream"
+      if [ -d "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" ]
+      then
+        # is alwasy a git repo
+        _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream"
 
-      _debug "Creating (local) tarball source ..."
-      git archive --format=tar.gz --prefix="${KP_NAME}-${KP_VERSION}/" -o "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/${KP_NAME}-${KP_VERSION}.tar.gz" HEAD
+        _debug "Creating (local) tarball source ..."
+        git archive --format=tar.gz --prefix="${KP_NAME}-${KP_VERSION}/" -o "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/${KP_NAME}-${KP_VERSION}.tar.gz" HEAD
 
-      _popd
+        _popd
+      else
+        _error "Not a valid local package. Upstream is not available."
+      fi
       ;;
   esac
   #am i local repo?

@@ -159,10 +159,13 @@ function load_config {
   # KP_BUILD_ARCH as a minimum
   if [ -z "${KP_NAME}" ]
   then
-    _error "KP_NAME is missing from the config."
+    _error "KP_NAME is missing from ${_PACKAGE} config."
   elif [ -z "${KP_VERSION}" ]
   then
-    _error "KP_VERSION is missing from the config."
+    _error "KP_VERSION is missing from ${_PACKAGE} config."
+  elif [ -z "${KP_BUILD_SPEC}" -a -z "${KP_BUILD_SPEC_TEMPLATE}" ]
+  then
+    _error "KP_BUILD_SPEC or KP_BUILD_SPEC_TEMPLATE is missing from ${_PACKAGE} config."
   else
     return 0
   fi
