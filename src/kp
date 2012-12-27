@@ -55,7 +55,9 @@ do
         CONFIG_FILE="${1/--config=/}"
       fi
       ;;
-    default)
+    *)
+      _error "Uknown command specified: $1"
+      exit 1
       ;;
   esac
   shift
@@ -134,6 +136,36 @@ NOW_LITERAL=$(date '+%Y-%m-%d %H:%M:%S')
 LOG_FILE="${LOG_DIR}/kp-${SUB_COMMAND}-${NOW}.log"
 touch $LOG_FILE
 _log "Logging started: ${NOW_LITERAL}"
+
+#
+# DEPENDANCY CHECKS
+#
+
+_MOCK_VERSION=$(mock --version 2>/dev/null)
+if [ ${?} -ne 0 ]
+then
+  _error "Can't find mock. Is it installed?"
+  exit 1
+fi
+
+_MOCK_GROUPS=$(getent group mock | grep $(id -ng))
+if [ ${?} -ne 0 ]
+then
+  _error "Current user is not part of the mock group."
+  exit 1
+fi
+
+
+_SPECTOOL_VERSIOIN=$(spectool --version 2>/dev/null)
+if [ ${?} -ne 0 ]
+then
+  _error "Can't find spectool. Is it installed?"
+#  exit 1
+fi
+
+#
+# MAIN
+#
 
 # start the main function sourced above
 parse_args $@
