@@ -30,18 +30,21 @@ OPT_UPSTREAM=
 function usage {
   _EXIT_VAL=${1:-0}
 
-  echo << EOF
+  cat << EOF
   Usage: $0 [-v] package1 package2 ... packageN
 
   Options:
+    -U   Checkout the upstream source as well
     -v   Show verbose output
     -?   Show this usage
     -V   Show version
 
   Long Options:
+    --upstream    Same as -U
     --verbose     Same as -v
     --help        Same as -?
     --version     Same as -V
+
 EOF
 
   exit ${_EXIT_VAL};
