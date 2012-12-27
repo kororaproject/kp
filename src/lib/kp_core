@@ -19,6 +19,30 @@
 # Utility functions for Korora building.
 
 #
+# GENERAL
+#
+
+function _machine_basearch {
+  echo $(uname -m)
+}
+
+
+function _machine_releasever {
+  echo $(lsb_release -r | awk '{print $2}')
+}
+
+function _machine_dist {
+  case $(lsb_release -i | awk '{print $3}') in
+    Fedora|fedora)
+      echo "fedora"
+      ;;
+    *)
+      echo "unknown"
+  esac
+}
+
+
+#
 # VERSION/USAGE
 #
 
@@ -98,6 +122,21 @@ function _debug {
 #
 # DIRECTORY HANDLING FUNCTIONS
 #
+function _mkdir {
+  _DIR=${1:-}
+
+  # ensure an valid name is given
+  [ "x${_DIR}" == "x" ] && return 1
+  [ "${_DIR}" == "." ] && return 1
+  [ "${_DIR}" == ".." ] && return 1
+
+  # check if directory already exists
+  [ -d "${_DIR}" ] && return 0
+
+  mkdir -p "${_DIR}"
+}
+
+
 function _pushd {
   _DIR=${1:-}
 
@@ -295,7 +334,7 @@ function package_upstream_checkout {
   if [ ! -d "${_UPSTREAM_DIR}" ]
   then
     _debug "Creating upstream directory."
-    mkdir -p "${_UPSTREAM_DIR}"
+    _mkdir "${_UPSTREAM_DIR}"
   fi
 
   # need to assess checkout based on type
