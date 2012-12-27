@@ -76,12 +76,12 @@ fi
 # DEFAULTS
 #
 
-[[ -z ${CONFIG_DIR} || ! -d ${CONFIG_DIR} ]] && CONFIG_DIR="/etc/kp"
-[[ -z ${LIB_DIR} || ! -d ${LIB_DIR} ]] && LIB_DIR="/usr/share/lib/kp/lib"
-[[ -z ${WORKING_DIR} || ! -d ${WORKING_DIR} ]] && WORKING_DIR="/var/lib/kp"
-[[ -z ${RELEASE_DIR} || ! -d ${RELEASE_DIR} ]] && RELEASE_DIR="/tmp"
-[[ -z ${LOG_DIR} || ! -d ${LOG_DIR} ]] && LOG_DIR="/usr/share/lib/kp/log"
-[[ -z ${CONFIG_FILE} || ! -f ${CONFIG_FILE} ]] && CONFIG_FILE="${CONFIG_DIR}/kp.conf"
+[ -z ${CONFIG_DIR} ]  && CONFIG_DIR="/etc/kp"
+[ -z ${LIB_DIR} ]     && LIB_DIR="/usr/share/lib/kp/lib"
+[ -z ${WORKING_DIR} ] && WORKING_DIR="/var/lib/kp"
+[ -z ${RELEASE_DIR} ] && RELEASE_DIR="/tmp"
+[ -z ${LOG_DIR} ]     && LOG_DIR="/usr/share/lib/kp/log"
+[ -z ${CONFIG_FILE} ] && CONFIG_FILE="${CONFIG_DIR}/kp.conf"
 
 #
 # INCLUDES
@@ -109,14 +109,6 @@ then
   exit 1
 fi
 
-
-# expand directories to absolute paths
-WORKING_DIR=$(readlink -e "${WORKING_DIR}")
-LIB_DIR=$(readlink -e "${LIB_DIR}")
-LOG_DIR=$(readlink -e "${LOG_DIR}")
-CONFIG_DIR=$(readlink -e "${CONFIG_DIR}")
-
-
 # build working subdirectories
 WORKING_PACKAGES_DIR="${WORKING_DIR}/packages"
 WORKING_REPOSITORY_DIR="${WORKING_DIR}/repository"
@@ -126,6 +118,13 @@ WORKING_RELEASE_CACHE_DIR="${WORKING_DIR}/release/cache"
 WORKING_RELEASE_TMP_DIR="${WORKING_DIR}/release/tmp"
 
 SCRIPT=$(basename $0)
+
+if [ ! -d "${WORKING_DIR}" ]
+then
+  _error "Working directory doesn't not exist. Have you ran \"kp --init\"?"
+  exit 1
+fi
+
 
 
 DEBUG=1
