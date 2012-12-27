@@ -322,6 +322,8 @@ function main {
     load_config ${F}
     [ ${?} -ne 0 ] && continue
 
+    _info "Building: ${KP_NAME}"
+
     if [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}" ]
     then
       _error "Package is not checked out, skipping"
