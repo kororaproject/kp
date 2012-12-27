@@ -23,9 +23,9 @@ OPT_VERBOSE=
 OPT_MOCK_CLEAN=
 OPT_MOCK_CLEAN_EACH=
 
-OPT_DIST=fedora
-OPT_RELEASEVER=17
-OPT_BASEARCH=x86_64
+OPT_DIST=$(_machine_dist)
+OPT_RELEASEVER=$(_machine_releasever)
+OPT_BASEARCH=$(_machine_basearch)
 
 #
 # BUILD HELPERS
@@ -103,7 +103,7 @@ function generate_spec {
   done
 
   # ensure sources directory exists
-  [ -d "sources" ] || mkdir "sources"
+  _mkdir "sources"
 
   if [ "${KP_BUILD_SPEC:(-9)}" == ".template" ]
   then
@@ -146,6 +146,7 @@ function gather_source {
         _popd
       else
         _error "Not a valid local package. Upstream is not available."
+        exit 1
       fi
       ;;
   esac
@@ -186,8 +187,11 @@ function mock_build {
     return 1
   fi
 
-  _pushd "${WORKING_REPOSITORY_DIR}"
-  _debug "Copying packages to: ${WORKING_REPOSITORY_DIR}"
+  _REPODIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/${OPT_BASEARCH}"
+
+  _debug "Copying packages to: ${_REPODIR}"
+  _mkdir "${_REPODIR}"
+  _pushd "${_REPODIR}"
   for x in $(grep ^Wrote /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |awk {'print $2'} |uniq)
   do
     x=$(basename $x)
@@ -245,10 +249,13 @@ function parse_args {
   do
     case "$1" in
       -a|--arch)
+        OPT_BASEARCH=
         ;;
       -d|--distribition)
+        OPT_DIST=
         ;;
       -r|--releasever)
+        OPT_RELEASEVER=
         ;;
       -x|--clean)
         OPT_MOCK_CLEAN=1
@@ -298,6 +305,8 @@ function parse_args {
 
 function main {
   _PACKAGE_BUILT=
+
+  _info "Building for ${OPT_DIST} ${OPT_RELEASEVER} (${OPT_BASEARCH})"
 
   if [ ! -z ${OPT_MOCK_CLEAN} ]
   then
@@ -354,6 +363,6 @@ function main {
   if [ ! -z "${_PACKAGE_BUILT}" ]
   then
     [ -z ${OPT_VERBOSE} ] &&  _VERBOSE= || _VERBOSE="-v"
-    createrepo ${_VERBOSE} "${WORKING_REPOSITORY_DIR}"
+    createrepo ${_VERBOSE} "${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/${OPT_BASEARCH}"
   fi
 }
