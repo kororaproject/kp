@@ -1,0 +1,95 @@
+#!/bin/bash
+#
+# Copyright 2012 "Korora Project" <dev@kororaproject.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the temms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+#
+# INTIALISE
+#
+OPT_VERBOSE=
+OPT_FORCE=
+
+
+#
+# FUNCTIONS
+#
+function usage {
+  _EXIT_VAL=${1:-0}
+
+  cat << EOF
+Usage: $0 help [options]
+
+Options:
+  -?   Show this usage
+  -V   Show version
+
+Long Options:
+  --verbose     Same as -v
+  --version     Same as -V
+
+EOF
+
+  exit ${_EXIT_VAL};
+}
+
+#
+# PARSE COMMAND LINE
+#
+
+function parse_args {
+  CMD_LINE=$(getopt -n$0 -u --longoptions="verbose version" "v V" $@)
+  [ ${?} -ne 0 ] && usage 1
+
+  set -- ${CMD_LINE}
+
+  while [ $# -gt 0 ]
+  do
+    case "$1" in
+      -v|--verbose)
+        OPT_VERBOSE=1
+        ;;
+      -V|--version)
+        version 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        usage 1
+        ;;
+      *)
+        break
+    esac
+    shift
+  done
+}
+
+
+#
+# MAIN
+#
+
+function main {
+  echo -e "Usage: kp --[subcommand] --help\n"
+  echo -e "Subcommands:
+  list
+  init
+  checkout
+  build
+  sync
+  release\n"
+}

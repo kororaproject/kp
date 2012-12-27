@@ -24,44 +24,53 @@ VERSION="0.1.0"
 SUB_COMMAND=
 CONFIG_FILE=
 
-# assume first parameter to be the subcommand
-while [ $# -gt 0 ] && [ -z ${SUB_COMMAND} ]
-do
-  case "$1" in
-    init|--init)
-      SUB_COMMAND=init
-      ;;
-    list|--list)
-      SUB_COMMAND=list
-      ;;
-    build|--build)
-      SUB_COMMAND=build
-      ;;
-    sync|--sync)
-      SUB_COMMAND=sync
-      ;;
-    checkout|--checkout)
-      SUB_COMMAND=checkout
-      ;;
-    release|--release)
-      SUB_COMMAND=relese
-      ;;
-    --config*)
-      if [ ${#1} -eq 8 ]
-      then
-        CONFIG_FILE=$2
-        shift
-      else
-        CONFIG_FILE="${1/--config=/}"
-      fi
-      ;;
-    *)
-      _error "Uknown command specified: $1"
-      exit 1
-      ;;
-  esac
-  shift
-done
+
+if [ $# -eq 0 ]
+then
+  SUB_COMMAND=help
+else
+  # assume first parameter to be the subcommand
+  while [ $# -gt 0 ] && [ -z ${SUB_COMMAND} ]
+  do
+    case "$1" in
+      init|--init)
+        SUB_COMMAND=init
+        ;;
+      list|--list)
+        SUB_COMMAND=list
+        ;;
+      help|--help)
+        SUB_COMMAND=help
+        ;;
+      build|--build)
+        SUB_COMMAND=build
+        ;;
+      sync|--sync)
+        SUB_COMMAND=sync
+        ;;
+      checkout|--checkout)
+        SUB_COMMAND=checkout
+        ;;
+      release|--release)
+        SUB_COMMAND=relese
+        ;;
+      --config*)
+        if [ ${#1} -eq 8 ]
+        then
+          CONFIG_FILE=$2
+          shift
+        else
+          CONFIG_FILE="${1/--config=/}"
+        fi
+        ;;
+      *)
+        _error "Uknown command specified: $1"
+        exit 1
+        ;;
+    esac
+    shift
+  done
+fi
 
 #
 # DEFAULTS
