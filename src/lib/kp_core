@@ -352,12 +352,7 @@ function package_upstream_checkout {
       fi
     fi
 
-    _warn "TODO: implement commit check"
-
-    # get the last commit and uncommit count
-#    _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
-#    _UNCOMMITED_CHANGES=$(git status -s | wc -l)
-
+    _warn "TODO: implement git sync check"
   elif [ "${KP_UPSTREAM_SRC_TYPE}" == "svn" ]
   then
     _warn "TODO: implement SVN sync check."
@@ -472,15 +467,27 @@ function get_sync_status {
       fi
     fi
 
-    _warn "TODO: implement commit check"
+    # commit/sync check
+    _UNCOMMITED_CHANGES=$(git status -s | grep -v ^?? | wc -l)
 
-    # get the last commit and uncommit count
-    _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
-    _UNCOMMITED_CHANGES=$(git status -s | wc -l)
-
-    if [ ${_UNCOMMITED_CHANGES} -eq 0 ]
+    if [ "x${KP_UPSTREAM_SRC_GIT_COMMIT}" != "x" ]
     then
-      KP_UPSTREAM_SYNC_STATE="S"
+      # get the last commit and uncommit count
+      _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
+      _UPSTREAM_LOC=$(git log --pretty=format:'%H' | grep -n ${KP_UPSTREAM_SRC_GIT_COMMIT} | cut -d: -f1)
+
+      if [ ${_UPSTREAM_LOC} -gt 1 ]
+      then
+        KP_UPSTREAM_SYNC_STATE="+"
+      elif [ ${_UPSTREAM_LOC} -gt 1 ]
+      then
+        KP_UPSTREAM_SYNC_STATE="S"
+      else
+        KP_UPSTREAM_SYNC_STATE="?"
+      fi
+    elif [ ${_UNCOMMITED_CHANGES} -eq 0 ]
+    then
+      KP_UPSTREAM_SYNC_STATE="s"
     fi
   elif [ "${KP_UPSTREAM_SRC_TYPE}" == "svn" ]
   then
