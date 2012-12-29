@@ -125,11 +125,11 @@ function gather_source {
     bare)
       # no source files
       ;;
-    binary)
+    binary|spec)
       echo spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
       spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
       ;;
-    git)
+    git|svn)
       # check upstream exists (required)
       if [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" ]
       then
@@ -157,11 +157,6 @@ function gather_source {
       exit 1
       ;;
   esac
-  #am i local repo?
-  #  git archive sha hash
-  #am I spec file tarball?
-  #do I have any patches
-  #echo "(we might have patches from upstream, or patches from git repo, need source tarball)"
 }
 
 function mock_build {
@@ -183,7 +178,7 @@ function mock_build {
 
   _debug "Building package, please wait ..."
   # --no-clean because we have srpm in there, else need to copy out (and build should be clean anyway)
-  mock ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $(grep ^Wrote /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |grep src.rpm |awk {'print $2'} |uniq))
+  mock ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $(grep ^Wrote: /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |grep src.rpm |awk {'print $2'} |uniq))
   _MOCK_RET=${?}
 
   _popd
@@ -199,7 +194,7 @@ function mock_build {
   _debug "Copying packages to: ${_REPODIR}"
   _mkdir "${_REPODIR}"
   _pushd "${_REPODIR}"
-  for x in $(grep ^Wrote /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |awk {'print $2'} |uniq)
+  for x in $(grep ^Wrote: /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |awk {'print $2'} |uniq)
   do
     x=$(basename $x)
     cp -f /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $x) .
