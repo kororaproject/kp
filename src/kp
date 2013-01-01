@@ -119,9 +119,9 @@ WORKING_RELEASE_TMP_DIR="${WORKING_DIR}/release/tmp"
 
 SCRIPT=$(basename $0)
 
-if [ ! -d "${WORKING_DIR}" ]
+if [ ! -d "${WORKING_DIR}" -a "${SUB_COMMAND}" != "init" ]
 then
-  _error "Working directory doesn't not exist. Have you ran \"kp --init\"?"
+  _error "Working directory doesn't not exist. Have you run \"kp --init\"?"
   exit 1
 fi
 

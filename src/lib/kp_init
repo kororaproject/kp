@@ -96,11 +96,22 @@ function parse_args {
 function main {
   _info "Initialising Korora Package environment ..."
 
-  # convert working dir is absolute path
-  WORKING_DIR=$(readlink -e "${WORKING_DIR}")
-
   # create working directory
   _info "Preparing: ${WORKING_DIR}"
+
+  if [ ! -e "${WORKING_DIR}" ]
+  then
+    #doesn't exist, so create it 
+    mkdir -p "${WORKING_DIR}"
+    if [ $? -ne 0 ]
+    then
+      _error "Could not create working directory."
+      exit 1
+    fi
+  else
+    # it exists, so convert working dir is absolute path
+    WORKING_DIR=$(readlink -e "${WORKING_DIR}")
+  fi
 
   if [ ! -d "${WORKING_DIR}" ]
   then
