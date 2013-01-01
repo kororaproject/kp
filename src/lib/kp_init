@@ -101,29 +101,28 @@ function main {
 
   if [ ! -e "${WORKING_DIR}" ]
   then
-    #doesn't exist, so create it 
+    # doesn't exist, so create it
     mkdir -p "${WORKING_DIR}"
     if [ $? -ne 0 ]
     then
       _error "Could not create working directory."
       exit 1
     fi
+    # we now have a parent dir, so create children
+    create_dirs
   else
-    # it exists, so convert working dir is absolute path
+    # parent already exists, so convert working dir is absolute path
     WORKING_DIR=$(readlink -e "${WORKING_DIR}")
-  fi
 
-  if [ ! -d "${WORKING_DIR}" ]
-  then
-    create_dirs
-  elif [ -n "${OPT_FORCE}" ]
-  then
-    _info "Already exists. Forcing clean ..."
+    if [ -n "${OPT_FORCE}" ]
+    then
+      _info "Already exists. Forcing clean ..."
 
-    rm -rf "${WORKING_DIR}/*"
-    create_dirs
-  else
-    _info "Already exists."
+      rm -rf "${WORKING_DIR}/*"
+      create_dirs
+    else
+      _info "Already exists."
+    fi
   fi
 
   if [ -w "${WORKING_DIR}" ]
