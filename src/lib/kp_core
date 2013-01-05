@@ -359,7 +359,6 @@ function package_upstream_checkout {
   elif [ "${KP_UPSTREAM_SRC_TYPE}" == "local" ]
   then
     _debug "Upstream already available in local package."
-  else
   elif [ "${KP_UPSTREAM_SRC_TYPE}" == "binary" ]
   then
     _debug "Upstream not available for binary package types."
