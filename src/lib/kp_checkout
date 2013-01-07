@@ -25,6 +25,121 @@ OPT_UPSTREAM=
 
 
 #
+# PRIVATE FUNCTIONS
+#
+
+#
+# int package_upstream_checkout(void)
+#
+# Performs a checkout of a Korora package's upstream into respective upstream
+# package directory.
+#
+# Note: assumes the package config has been sourced
+#
+
+function _package_upstream_checkout {
+
+  if [ -z ${KP_NAME} ]
+  then
+    _error "No configuration file loaded (KP_NAME undefined). Unable to checkout package."
+    return 1
+  elif [ -z ${KP_UPSTREAM_SRC_TYPE} ]
+  then
+    _error "No upstream type specified (KP_UPSTREAM_SRC_TYPE undefined)."
+    return 1
+  fi
+
+  _UPSTREAM_DIR="${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream"
+
+
+  # need to assess checkout based on type
+  if [ "${KP_UPSTREAM_SRC_TYPE}" == "git" ]
+  then
+    _mkdir "${_UPSTREAM_DIR}"
+
+    # check if we have a checkout already
+    if [ ! -d "${UPSTREAM_DIR}/.git" ]
+    then
+      # update tree, fetching all branches and tags
+      _debug "Cloning upstream : ${KP_UPSTREAM_SRC_URL}"
+      _OUT=$(git clone ${KP_UPSTREAM_SRC_URL} ${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream)
+      if [ ${?} -ne 0 ]
+      then
+        _debug "${_OUT}"
+      fi
+    fi
+
+    _warn "TODO: implement git sync check"
+  elif [ "${KP_UPSTREAM_SRC_TYPE}" == "svn" ]
+  then
+    _mkdir "${_UPSTREAM_DIR}"
+    _warn "TODO: implement SVN sync check."
+  elif [ "${KP_UPSTREAM_SRC_TYPE}" == "local" ]
+  then
+    _debug "Upstream already available in local package."
+  elif [ "${KP_UPSTREAM_SRC_TYPE}" == "binary" ]
+  then
+    _debug "Upstream not available for binary package types."
+  elif [ "${KP_UPSTREAM_SRC_TYPE}" == "bare" ]
+  then
+    _debug "Upstream not available for bare package types."
+  else
+    _warn "Unknown upstream source type specified: ${KP_UPSTREAM_SRC_TYPE}"
+  fi
+
+  return 0
+}
+
+#
+# int package_checkout(void)
+#
+# Performs a checkout of a Korora package into the working directory.
+#
+# Note: assumes the package config has been sourced
+#
+function _package_checkout {
+  if [ -z ${KP_NAME} ]
+  then
+    _error "No configuration file loaded (KP_NAME undefined). Unable to checkout package."
+    return 1
+  fi
+
+  _WORKING_PATH="${WORKING_PACKAGES_DIR}/${KP_NAME}"
+
+  # check if destination path already exists
+  if [ -d "${_WORKING_PATH}" ]
+  then
+    _debug "Project path already exists: ${_WORKING_PATH}"
+    return 0
+  fi
+
+  _debug "Creating package path: ${_WORKING_PATH}"
+
+  if ! mkdir -p ${_WORKING_PATH}
+  then
+    _error "Unable to create package path: ${_WORKING_PATH}"
+    return 1
+  fi
+
+  # update tree, fetching all branches and tags
+  _debug "Cloning from: ${KP_URL}"
+
+  _OUT=$(git clone ${KP_URL} ${_WORKING_PATH})
+  if [ ${?} -ne 0 ]
+  then
+    _error "Unable to clone package."
+    return 1
+  fi
+
+  _warn "TODO: implement commit check"
+
+  # get the last commit and uncommit count
+  _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
+  _UNCOMMITED_CHANGES=$(git status -s | wc -l)
+  return 0
+}
+
+#
 # FUNCTIONS
 #
 function usage {
@@ -116,12 +231,12 @@ function main {
     echo "Checking out: ${KP_NAME}"
 
     # grab the korora package
-    package_checkout
+    _package_checkout
 
     # grab the relevant upstream source
     if [ -n "${OPT_UPSTREAM}" ]
     then
-      package_upstream_checkout
+      _package_upstream_checkout
     fi
   done
 }
