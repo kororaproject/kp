@@ -97,6 +97,19 @@ function parse_args {
     esac
     shift
   done
+
+  # remaining arguments are packages
+  PACKAGES=""
+  if [ $# -eq 0 ]
+  then
+    echo "Building all packages ..."
+  else
+    while [ $# -gt 0 ]
+    do
+      PACKAGES="${PACKAGES} $1"
+      shift
+    done
+  fi
 }
 
 
@@ -108,7 +121,7 @@ function main {
   _info "Korora Packages:"
 
   # load the configuration
-  for F in $(list_config_available)
+  for F in $(list_config_available "${PACKAGES}")
   do
     load_config ${F}
     [ ${?} -ne 0 ] && continue
