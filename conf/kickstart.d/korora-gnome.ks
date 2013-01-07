@@ -34,7 +34,7 @@ xconfig --startxonboot
 services --enabled=NetworkManager,lirc --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmcore,capi,iscsi,iscsid,isdn,netfs,network,nfs,nfslock,pcscd,rpcbind,rpcgssd,rpcidmapd,rpcsvcgssd,sendmail,sshd
 
 #Partitioning, for Live CD
-part / --size 7178 --fstype ext4
+part / --size 7188 --fstype ext4
 
 
 #Partitioning, for virtual machine testing
@@ -50,22 +50,24 @@ part / --size 7178 --fstype ext4
 
 #Repos
 repo --name="Adobe Systems Incorporated" --baseurl=http://linuxdownload.adobe.com/linux/%%KP_BASEARCH%%/ --cost=1000
-repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%%" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%%" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
 #repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
 repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
 repo --name="Google Chrome" --baseurl=http://dl.google.com/linux/chrome/rpm/stable/%%KP_BASEARCH%%/ --cost=1000
-repo --name="Korora %%KP_VERSION%%" --baseurl=file://%%KP_REPOSITORY_DIR%%/ --cost=10
+repo --name="Korora %%KP_VERSION%%" --baseurl=file://%%KP_REPOSITORY_DIR%%/%%KP_VERSION%%/%%KP_BASEARCH/ --cost=10
 #repo --name="Kororaa Testing" --baseurl=file:///home/chris/repos/kororaa/testing/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=5
 #repo --name="Ksplice Uptrack for Fedora" --baseurl=http://www.ksplice.com/yum/uptrack/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
-repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
-repo --name="RPMFusion Free - Updates" --baseurl=http://download1.rpmfusion.org/free/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
-repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
-repo --name="RPMFusion Non-Free - Updates" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/development/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Free - Updates" --baseurl=http://download1.rpmfusion.org/free/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/development/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Non-Free - Updates" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
 repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
 
 %packages
 @admin-tools
-@base
+@critical-path-base
 @base-x
 @british-support
 @core
@@ -75,6 +77,7 @@ repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm
 selinux-policy
 selinux-policy-targeted
 @gnome-desktop
+@gnome-games
 @online-docs
 @printing
 @input-methods
@@ -108,16 +111,17 @@ virtualbox-release
 -fedora-logos
 -fedora-release
 -fedora-release-notes
-kororaa-extras
-kororaa-release
-kororaa-logos
+korora-extras
+korora-release
+korora-logos
 #kororaa-package-config-apt
-kororaa-release-notes
+korora-release-notes
 elementary-gtk
 elementary-icon-theme
 
 #Package for checksumming livecd on boot, installer, memtest
 anaconda
+anaconda-widgets
 isomd5sum
 
 #Extra packages
@@ -130,6 +134,7 @@ beesu
 #bootconf-gui
 brltty
 btrfs-progs
+chrony
 cinnamon
 control-center
 cups-pdf
@@ -142,17 +147,22 @@ evolution
 evolution-mapi
 expect
 firefox
+*firmware*
 font-manager
 fpaste
 fprintd-pam
 fuse
+libXft-infinality
+freetype-infinality
+fontconfig-infinality
 gconf-editor
 gimp
 git
 gnome-disk-utility
-gnome-games
+gnome-games*
 gnome-lirc-properties
-gnome-packagekit-extra
+#gnome-packagekit-extra
+gnome-packagekit
 #gnome-shell
 #gnome-shell-extension-*
 #gnome-shell-extensions-mgse-*
@@ -179,6 +189,7 @@ gnote
 gparted
 gpgme
 gtk-murrine-engine
+gtk-unico-engine
 gvfs-obexftp
 gwibber
 hardlink
@@ -193,7 +204,7 @@ jockey-gtk
 jockey-selinux
 #k3b
 #k3b-extras-freeworld
-kororaa-settings-gnome
+korora-settings-gnome
 #New libreoffice from Fedora repos
 libreoffice-calc
 libreoffice-draw
@@ -215,6 +226,8 @@ libsane-hpaio
 lirc
 lirc-remotes
 liveusb-creator
+mtpfs
+mlocate
 mozilla-adblock-plus
 mozilla-downthemall
 mozilla-flashblock
@@ -228,13 +241,14 @@ nautilus-open-terminal
 #nautilus-search-tool
 nautilus-sendto
 ncftp
-NetworkManager-gnome
-NetworkManager-pptp
+#NetworkManager-gnome
 NetworkManager-openconnect
 NetworkManager-openswan
 NetworkManager-openvpn
+NetworkManager-pptp
 NetworkManager-vpnc
-ntp
+NetworkManager-wimax
+-ntp
 p7zip
 p7zip-plugins
 PackageKit-command-not-found
@@ -245,6 +259,7 @@ pcsc-lite-ccid
 #pidgin-rhythmbox
 planner
 polkit-desktop-policy
+prelink
 samba
 samba-winbind
 sane-backends
@@ -262,7 +277,7 @@ deluge
 vim
 #vinagre
 #vino
-wammu
+#wammu
 pybluez
 wget
 xfsprogs
@@ -274,6 +289,7 @@ yum-updatesd
 
 #Multimedia
 alsa-plugins-pulseaudio
+alsa-utils
 audacity-freeworld
 brasero
 brasero-nautilus
@@ -315,6 +331,7 @@ pavucontrol
 #pitivi
 policycoreutils-gui
 pulseaudio-module-bluetooth
+rawtherapee
 rhythmbox
 soundconverter
 sound-juicer
@@ -373,15 +390,7 @@ echo "****BUILDING AKMODS****"
 /usr/sbin/akmods --force
 
 #Import keys
-for x in fedora kororaa adobe-linux rpmfusion-free-fedora-16-primary rpmfusion-nonfree-fedora-16-primary rpmfusion-free-fedora-%%KP_VERSION%%-primary rpmfusion-nonfree-fedora-%%KP_VERSION%%-primary ; do rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-$x ; done
-#Chrome (this should prob just go in the repo file instead)
-wget https://dl-ssl.google.com/linux/linux_signing_key.pub
-rpm --import linux_signing_key.pub
-rm linux_signing_key.pub
-#VirtualBox
-wget http://download.virtualbox.org/virtualbox/debian/oracle_vbox.asc
-rpm --import oracle_vbox.asc
-rm oracle_vbox.asc
+for x in fedora google-chrome virtualbox korora adobe rpmfusion-free-fedora-17-primary rpmfusion-nonfree-fedora-17-primary rpmfusion-free-fedora-18-primary rpmfusion-nonfree-fedora-18-primary ; do rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-$x ; done
 
 #Start yum-updatesd
 systemctl enable yum-updatesd.service
@@ -445,11 +454,11 @@ if [ -f /usr/share/applications/liveinst.desktop ]; then
   sed -i -e 's/NoDisplay=true/NoDisplay=false/' /usr/share/applications/liveinst.desktop ""
   # need to move it to anaconda.desktop to make shell happy
   #cp /usr/share/applications/liveinst.desktop /usr/share/applications/anaconda.desktop
-  cat >> /usr/share/glib-2.0/schemas/org.kororaa.gschema.override << FOE
+  cat >> /usr/share/glib-2.0/schemas/org.korora.gschema.override << FOE
 [org.gnome.shell]
 favorite-apps=['firefox.desktop', 'evolution.desktop', 'vlc.desktop', 'shotwell.desktop', 'libreoffice-writer.desktop', 'nautilus.desktop', 'liveinst.desktop']
 FOE
-  cat >> /usr/share/glib-2.0/schemas/org.kororaa.gschema.override << FOE
+  cat >> /usr/share/glib-2.0/schemas/org.korora.gschema.override << FOE
 [org.cinnamon]
 favorite-apps=['cinnamon-settings.desktop', 'firefox.desktop', 'evolution.desktop', 'vlc.desktop', 'shotwell.desktop', 'libreoffice-writer.desktop', 'nautilus.desktop', 'liveinst.desktop']
 FOE

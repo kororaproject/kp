@@ -19,7 +19,7 @@ cat > /etc/rc.d/init.d/livesys << EOF
 
 . /etc/init.d/functions
 
-if ! strstr "\`cat /proc/cmdline\`" liveimg || [ "\$1" != "start" ]; then
+if ! strstr "\`cat /proc/cmdline\`" rd.live.image || [ "\$1" != "start" ]; then
     exit 0
 fi
 
@@ -37,12 +37,6 @@ touch /.liveimg-configured
 # Make sure we don't mangle the hardware clock on shutdown
 ln -sf /dev/null /etc/systemd/system/hwclock-save.service
 
-# mount live image
-if [ -b \`readlink -f /dev/live\` ]; then
-   mkdir -p /mnt/live
-   mount -o ro /dev/live /mnt/live 2>/dev/null || mount /dev/live /mnt/live
-fi
-
 livedir="LiveOS"
 for arg in \`cat /proc/cmdline\` ; do
   if [ "\${arg##live_dir=}" != "\${arg}" ]; then
@@ -58,8 +52,8 @@ if ! strstr "\`cat /proc/cmdline\`" noswap && [ -n "\$swaps" ] ; then
     action "Enabling swap partition \$s" swapon \$s
   done
 fi
-if ! strstr "\`cat /proc/cmdline\`" noswap && [ -f /mnt/live/\${livedir}/swap.img ] ; then
-  action "Enabling swap file" swapon /mnt/live/\${livedir}/swap.img
+if ! strstr "\`cat /proc/cmdline\`" noswap && [ -f /run/initramfs/live/\${livedir}/swap.img ] ; then
+  action "Enabling swap file" swapon /run/initramfs/live/\${livedir}/swap.img
 fi
 
 mountPersistentHome() {
@@ -74,8 +68,8 @@ mountPersistentHome() {
     mountopts="-t jffs2"
   elif [ ! -b "\$homedev" ]; then
     loopdev=\`losetup -f\`
-    if [ "\${homedev##/mnt/live}" != "\${homedev}" ]; then
-      action "Remounting live store r/w" mount -o remount,rw /mnt/live
+    if [ "\${homedev##/run/initramfs/live}" != "\${homedev}" ]; then
+      action "Remounting live store r/w" mount -o remount,rw /run/initramfs/live
     fi
     losetup \$loopdev \$homedev
     homedev=\$loopdev
@@ -109,8 +103,8 @@ findPersistentHome() {
 
 if strstr "\`cat /proc/cmdline\`" persistenthome= ; then
   findPersistentHome
-elif [ -e /mnt/live/\${livedir}/home.img ]; then
-  homedev=/mnt/live/\${livedir}/home.img
+elif [ -e /run/initramfs/live/\${livedir}/home.img ]; then
+  homedev=/run/initramfs/live/\${livedir}/home.img
 fi
 
 # if we have a persistent /home, then we want to go ahead and mount it
@@ -170,7 +164,7 @@ if strstr "\`cat /proc/cmdline\`" CDLABEL= ; then
 # io errors due to not being able to get files...
 #cat /sbin/halt > /dev/null
 #cat /sbin/reboot > /dev/null
-#/usr/sbin/eject -p -m \$(readlink -f /dev/live) >/dev/null 2>&1
+#/usr/sbin/eject -p -m \$(readlink -f /run/initramfs/livedev) >/dev/null 2>&1
 #echo "Please remove the CD from your drive and press Enter to finish restarting"
 #read -t 30 < /dev/console
 FOE
