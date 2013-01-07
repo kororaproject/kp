@@ -22,7 +22,7 @@
 OPT_VERBOSE=
 OPT_MOCK_CLEAN=
 OPT_MOCK_CLEAN_EACH=
-OPT_CONTINUE_ON_ERROR=
+OPT_PAUSE_ON_ERROR=
 
 OPT_DIST=$(_machine_dist)
 OPT_RELEASEVER=$(_machine_releasever)
@@ -169,17 +169,18 @@ function mock_build {
     return 1
   fi
 
-  _REPODIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/${OPT_BASEARCH}"
+  _debug "Copying packages ..."
 
-  _debug "Copying packages to: ${_REPODIR}"
-  _mkdir "${_REPODIR}"
-  _pushd "${_REPODIR}"
-  for x in $(grep ^Wrote: /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |awk {'print $2'} |uniq)
+  for P in $(grep ^Wrote: /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log | awk {'print $2'} | uniq)
   do
-    x=$(basename $x)
-    cp -f /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $x) .
+    P=$(basename $P)
+    if [[ $P =~ src\.rpm$ ]]
+    then
+      cp -f /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/${P} ${_REPO_SOURCE_DIR}
+    else
+      cp -f /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/${P} ${_REPO_ARCH_DIR}
+    fi
   done
-  _popd
 }
 
 #
@@ -208,7 +209,7 @@ function usage {
     --releasever            Same as -r
     --clean                 Same as -x
     --clean-each-package    Same as -X
-    --continue-on-error     Skip to next package on build error
+    --pause-on-error        Pause before continuing on package build error
     --verbose               Same as -v
     --help                  Same as -?
     --version               Same as -V
@@ -223,7 +224,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: clean clean-each-package continue-on-error verbose version help" "a: d: r: x X v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: clean clean-each-package pause-on-error verbose version help" "a: d: r: x X v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -249,8 +250,8 @@ function parse_args {
       -x|--clean)
         OPT_MOCK_CLEAN_EACH=1
         ;;
-      --continue-on-error)
-        OPT_CONTINUE_ON_ERROR=1
+      --pause-on-error)
+        OPT_PAUSE_ON_ERROR=1
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -301,6 +302,14 @@ function main {
   then
     initialise_mock
   fi
+
+  _REPO_SOURCE_DIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/source"
+  _REPO_ARCH_DIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/${OPT_BASEARCH}"
+
+  _debug "Copying source packages to: ${_REPO_SOURCE_DIR}"
+  _debug "Copying arch packages to: ${_REPO_ARCH_DIR}"
+  _mkdir "${_REPO_ARCH_DIR}"
+  _mkdir "${_REPO_SOURCE_DIR}"
 
   # load the configuration
   for F in $(list_config_available "${PACKAGES}")
@@ -355,7 +364,10 @@ function main {
   # rebuild the repository directory
   if [ ! -z "${_PACKAGE_BUILT}" ]
   then
-    [ -z ${OPT_VERBOSE} ] &&  _VERBOSE= || _VERBOSE="-v"
-    createrepo ${_VERBOSE} "${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/${OPT_BASEARCH}"
+    _info "Rebuilding repository metadata ..."
+
+    [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
+    createrepo ${_VERBOSE} "${_REPO_ARCH_DIR}"
+    createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
   fi
 }
