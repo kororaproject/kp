@@ -22,31 +22,11 @@
 OPT_VERBOSE=
 OPT_MOCK_CLEAN=
 OPT_MOCK_CLEAN_EACH=
+OPT_CONTINUE_ON_ERROR=
 
 OPT_DIST=$(_machine_dist)
 OPT_RELEASEVER=$(_machine_releasever)
 OPT_BASEARCH=$(_machine_basearch)
-
-#
-# BUILD HELPERS
-#
-
-# forward declared helper functions should be overridden when a helper exists
-function build_pre_init {
-  true
-}
-
-function build_pre_fetch {
-  true
-}
-
-function build_pre_build {
-  true
-}
-
-function build_post_build {
-  true
-}
 
 #
 # PRIVATE FUNCTIONS
@@ -228,6 +208,7 @@ function usage {
     --releasever            Same as -r
     --clean                 Same as -x
     --clean-each-package    Same as -X
+    --continue-on-error     Skip to next package on build error
     --verbose               Same as -v
     --help                  Same as -?
     --version               Same as -V
@@ -242,7 +223,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: clean clean-each-package verbose version help" "a: d: r: x X v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: clean clean-each-package continue-on-error verbose version help" "a: d: r: x X v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -267,6 +248,9 @@ function parse_args {
         ;;
       -x|--clean)
         OPT_MOCK_CLEAN_EACH=1
+        ;;
+      --continue-on-error)
+        OPT_CONTINUE_ON_ERROR=1
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -339,6 +323,9 @@ function main {
 
     [ "${KP_UPSTREAM_SRC_TYPE}" == "upstream" ] && check_upstream ${F}
 
+    # ensure any build helpers are reset before sourcing
+    source "${LIB_DIR}/kp_buildhelper"
+
     # source the build helper if it exists
     if [ -r "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/build.helper" ]
     then
@@ -363,7 +350,6 @@ function main {
     build_post_build || continue
 
     _PACKAGE_BUILT=1
-
   done
 
   # rebuild the repository directory
