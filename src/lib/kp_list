@@ -123,11 +123,9 @@ function main {
   # load the configuration
   for F in $(list_config_available "${PACKAGES}")
   do
-    load_config ${F}
-    [ ${?} -ne 0 ] && continue
+    load_config ${F} || continue
 
-    get_sync_status
-    [ ${?} -ne 0 ] && continue
+    get_sync_status || continue
 
     [ -n "${OPT_CHECKOUT_ONLY}" -a "${KP_PACKAGE_SYNC_STATE}" == "-" ] && continue
 

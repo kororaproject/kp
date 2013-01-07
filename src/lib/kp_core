@@ -174,16 +174,20 @@ function reset_config_variables {
 }
 
 function load_config {
-  _PACKAGE=${1:-''}
-  _PACKAGE_CONF="${CONFIG_DIR}/packages.d/${_PACKAGE}.conf"
+  _PACKAGE=${1:-}
 
   if [ -z $_PACKAGE ]
   then
     _debug "No package specified for loading."
     return 1
-  elif [ ! -r "${_PACKAGE_CONF}" ]
+  elif [ -r "${CONFIG_DIR}/packages.d/${_PACKAGE}" ]
   then
-    _debug "Can't find configuration ${_PACKAGE_CONF}"
+    _PACKAGE_CONF="${CONFIG_DIR}/packages.d/${_PACKAGE}"
+  elif [ -r "${CONFIG_DIR}/packages.d/${_PACKAGE}.conf" ]
+  then
+    _PACKAGE_CONF="${CONFIG_DIR}/packages.d/${_PACKAGE}.conf"
+  else
+    _debug "Can't find configuration for ${_PACKAGE}"
     return 1
   fi
 
@@ -222,24 +226,27 @@ function load_config {
 #
 
 function list_config_available {
-  _PACKAGES=${1:-}
+  _PACKAGES=( ${1:-} )
   _FILES=
 
   for C in $(ls -1 ${CONFIG_DIR}/packages.d/kp-*.conf)
   do
     _FILE=$(basename $C)
-    _FILE=${_FILE%.*}
 
-    load_config ${_FILE}
-    [ ${?} -ne 0 ] && continue
+    load_config ${_FILE} || continue
 
-    # skip if this is not requested
-    if [ -n "${_PACKAGES}" ]
+    if [ ${#_PACKAGES[@]} -eq 0 ]
     then
-      echo ${_PACKAGES} | grep -q ${KP_NAME} || continue
+      _FILES="${_FILES} ${_FILE}"
+    else
+      for P in ${_PACKAGES}
+      do
+        if [ "${P}" == "${KP_NAME}" ]
+        then
+          _FILES="${_FILES} ${_FILE}"
+        fi
+      done
     fi
-
-    _FILES="${_FILES} ${_FILE}"
   done
 
   echo ${_FILES}
@@ -325,12 +332,24 @@ function get_sync_status {
   # sync requires the package directory to exist
   [ ! -d ${WORKING_PACKAGES_DIR}/${KP_NAME} ] && return 0
 
-  KP_PACKAGE_SYNC_STATE="A"
+  _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}"
+
+  KP_PACKAGE_SYNC_STATE="M"
+
+  # commit/sync check
+  _UNCOMMITED_CHANGES=$(git status -s | grep -v ^?? | wc -l)
+
+  if [ ${_UNCOMMITED_CHANGES} -eq 0 ]
+  then
+    KP_PACKAGE_SYNC_STATE="S"
+  fi
+
+  _popd
 
   # sync requires the package upstream directory to sync
   [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" ] && return 0
 
-  pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" >/dev/null
+  _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream"
 
   # assume modified unless proven in sync
   KP_UPSTREAM_SYNC_STATE="M"
@@ -413,7 +432,7 @@ function get_sync_status {
     _warn "Unknown upstream source type specified: ${KP_UPSTREAM_SRC_TYPE}"
   fi
 
-  popd >/dev/null
+  _popd
 }
 
 
