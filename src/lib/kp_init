@@ -22,6 +22,24 @@
 OPT_VERBOSE=
 OPT_FORCE=
 
+#
+# PRIVATE FUNCTIONS
+#
+
+function _create_dirs {
+  _pushd "${WORKING_DIR}"
+
+  for D in packages repository kickstart release release/cache release/tmp
+  do
+    if [ ! -d "${D}" ]
+    then
+      _info " - Creating ${D}"
+      _mkdir "${D}" || _warn "Unable to create."
+    fi
+  done
+
+  _popd
+}
 
 #
 # FUNCTIONS
@@ -109,27 +127,27 @@ function main {
   if [ ! -e "${WORKING_DIR}" ]
   then
     # doesn't exist, so create it
-    mkdir -p "${WORKING_DIR}"
+    _mkdir "${WORKING_DIR}"
     if [ $? -ne 0 ]
     then
       _error "Could not create working directory."
       exit 1
     fi
+
     # we now have a parent dir, so create children
-    create_dirs
+    _create_dirs
   else
     # parent already exists, so convert working dir is absolute path
     WORKING_DIR=$(readlink -e "${WORKING_DIR}")
 
     if [ -n "${OPT_FORCE}" ]
     then
-      _info "Already exists. Forcing clean ..."
+      _info "Forcing clean ..."
 
       rm -rf "${WORKING_DIR}/*"
-      create_dirs
-    else
-      _info "Already exists."
     fi
+
+    _create_dirs
   fi
 
   if [ -w "${WORKING_DIR}" ]
@@ -144,10 +162,3 @@ function main {
   fi
 }
 
-function create_dirs {
-  for d in packages repository kickstart release release/cache release/tmp
-  do
-    _info " - Creating $d"
-    mkdir -p "${WORKING_DIR}/$d" || _warn "Unable to create."
-  done
-}
