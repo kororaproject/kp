@@ -87,7 +87,7 @@ fi
 # INCLUDES
 #
 
-if [ ! -r "${CONFIG_FILE}" ]
+if [ ! -r "${CONFIG_FILE}" -a "${SUB_COMMAND}" != "init" ]
 then
   echo "FATAL: No configuration file found."
   exit 1
@@ -95,7 +95,7 @@ else
   source "${CONFIG_FILE}"
 fi
 
-if [ ! -d "${LIB_DIR}" ]
+if [ ! -d "${LIB_DIR}" -a "${SUB_COMMAND}" != "init" ]
 then
   echo "FATAL: Invalid LIB_DIR defined."
   exit 1
@@ -103,7 +103,7 @@ else
   source ${LIB_DIR}/kp_core
 fi
 
-if [ ! -d "${LOG_DIR}" ]
+if [ ! -d "${LOG_DIR}" -a "${SUB_COMMAND}" != "init" ]
 then
   echo "FATAL: Invalid LOG_DIR defined."
   exit 1
@@ -142,8 +142,11 @@ NOW=$(date +'%s')
 NOW_LITERAL=$(date '+%Y-%m-%d %H:%M:%S')
 
 LOG_FILE="${LOG_DIR}/kp-${SUB_COMMAND}-${NOW}.log"
-touch $LOG_FILE
-_log "Logging started: ${NOW_LITERAL}"
+if [ "${SUB_COMMAND}" != "init" ]
+then
+  touch $LOG_FILE
+  _log "Logging started: ${NOW_LITERAL}"
+fi
 
 #
 # DEPENDANCY CHECKS
