@@ -96,6 +96,13 @@ function parse_args {
 function main {
   _info "Initialising Korora Package environment ..."
 
+  # create log directory
+  _info "Preparing: ${LOG_DIR}"
+  if [ ! -d "${LOG_DIR}" ]
+  then
+    mkdir -p "${LOG_DIR}" || _warn "Unable to create log dir."
+  fi
+
   # create working directory
   _info "Preparing: ${WORKING_DIR}"
 
@@ -143,7 +150,4 @@ function create_dirs {
     _info " - Creating $d"
     mkdir -p "${WORKING_DIR}/$d" || _warn "Unable to create."
   done
-
-  mkdir -p "${LOG_DIR}" || _warn "Unable to create log dir."
-
 }
