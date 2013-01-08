@@ -239,7 +239,7 @@ function list_config_available {
     then
       _FILES="${_FILES} ${_FILE}"
     else
-      for P in ${_PACKAGES}
+      for P in "${_PACKAGES[@]}"
       do
         if [ "${P}" == "${KP_NAME}" ]
         then
