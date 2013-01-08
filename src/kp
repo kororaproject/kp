@@ -128,37 +128,39 @@ fi
 
 # variables based on config
 # default to http for GIT URL unless otherwise specified
-GIT_URL="${GIT_URL_HTTP}"
+GIT_URL="${GIT_URL_GIT}"
 
-# if we're using a developer account, then set git protocol to ssh regardless
-if [ -n "${KP_DEV_ACCOUNT}" -a "${GIT_PROTOCOL}" == "git" ]
+if [ "${SUB_COMMAND}" == "checkout" ]
 then
-  _warn "Developers cannot use git://, switching to ssh:// (you may use https instead)"
-  GIT_PROTOCOL="ssh"
-elif [ -z "${KP_DEV_ACCOUNT}" -a "${GIT_PROTOCOL}" == "ssh" ]
-then
-  _warn "SSH access is only available to developers, falling back to default of git://"
-  GIT_PROTOCOL="git"
-fi
-
-
-case "${GIT_PROTOCOL}" in
-  git)
-    GIT_URL="${GIT_URL_GIT}"
-    ;;
-  http|https)
-    GIT_PROTOCOL="https"
-    GIT_URL="${GIT_URL_HTTP}"
-    ;;
-  ssh)
-    GIT_URL="${GIT_URL_SSH}"
-    ;;
-  *)
-    _warn "Unknown protocol specified, falling back to default of git://"
+  # if we're using a developer account, then set git protocol to ssh regardless
+  if [ -n "${KP_DEV_ACCOUNT}" -a "${GIT_PROTOCOL}" == "git" ]
+  then
+    _warn "Developers cannot use git://, switching to ssh:// (you may use https instead)"
+    GIT_PROTOCOL="ssh"
+  elif [ -z "${KP_DEV_ACCOUNT}" -a "${GIT_PROTOCOL}" == "ssh" ]
+  then
+    _warn "SSH access is only available to developers, falling back to default of git://"
     GIT_PROTOCOL="git"
-    GIT_URL="${GIT_URL_GIT}"
-    ;;
-esac
+  fi
+
+  case "${GIT_PROTOCOL}" in
+    git)
+      GIT_URL="${GIT_URL_GIT}"
+      ;;
+    http|https)
+      GIT_PROTOCOL="https"
+      GIT_URL="${GIT_URL_HTTP}"
+      ;;
+    ssh)
+      GIT_URL="${GIT_URL_SSH}"
+      ;;
+    *)
+      _warn "Unknown protocol specified, falling back to default of git://"
+      GIT_PROTOCOL="git"
+      GIT_URL="${GIT_URL_GIT}"
+      ;;
+  esac
+fi
 
 
 #
