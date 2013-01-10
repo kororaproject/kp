@@ -109,8 +109,6 @@ function gather_source {
       # no source files
       ;;
     binary|spec)
-      echo spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
-
       # create a temporary download dir so we can atomic copy
       _TMP=$(mktemp --tmpdir -d "spec-download.XXXXXX")
       _pushd "${_TMP}"
