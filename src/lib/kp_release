@@ -25,8 +25,8 @@ OPT_USB=
 OPT_ISO=1
 
 
-OPT_RELEASE_VERSION=17
-OPT_RELEASE_CODENAME="Bubbles"
+OPT_RELEASE_VERSION=18
+OPT_RELEASE_CODENAME="Flo"
 OPT_RELEASE_BASEARCH="x86_64"
 
 #
@@ -36,6 +36,11 @@ OPT_RELEASE_BASEARCH="x86_64"
 function _template_inflate {
   _IN_FILE=${1}
   _OUT_FILE=${2}
+
+  if [ -r ${_OUT_FILE} ]
+  then
+    cp "${_OUT_FILE}" "${_IN_FILE}"
+  fi
 
   # substitute variables
   sed -i "s@%%KP_KICKSTART_DIR%%@${CONFIG_DIR}/kickstart.d@g" ${_IN_FILE}
@@ -148,7 +153,7 @@ function main {
   else
     _VERBOSE=
 
-    if [ ${OPT_VERBOSE} -eq 1 ]
+    if [ ! -z ${OPT_VERBOSE} ]
     then
       _VERBOSE="--version"
     fi
@@ -164,19 +169,18 @@ function main {
       _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
 
       # create working directory
-      _info "Preparing release template: ${WORKING_DIR}"
-
       _TEMPLATE="/tmp/${R}.${RANDOM}"
 
+      _info "Preparing release template: ${_TEMPLATE}"
+
       #
-      cp "${CONFIG_DIR}/kickstart.d/${R}.ks" "${_TEMPLATE}"
-      _template_inflate "${_TEMPLATE}"
+      _template_inflate "${_TEMPLATE}" "${CONFIG_DIR}/kickstart.d/${R}.ks"
 
       # create the CD
-      livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="korora-${OPT_RELEASE_VERSION}-live" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" -cache=${WORKING_RELEASE_CACHE_DIR} --tmpdir ${WORKING_RELEASE_TMP_DIR}
+      livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="korora-${OPT_RELEASE_VERSION}-live" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}"
 
       # clean up our inflated template file
-      rm -f "${_TEMPLATE}"
+      #rm -f "${_TEMPLATE}"
     done
   fi
 }
