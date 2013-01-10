@@ -107,7 +107,16 @@ function gather_source {
       ;;
     binary|spec)
       echo spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
-      spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
+
+      # create a temporary download dir so we can atomic copy
+      _TMP=$(mktemp --tmpdir -d "spec-download.XXXXXX")
+      _pushd "${_TMP}"
+      spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "."
+      mv * "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
+      _popd
+
+      # clean up now empty dir
+      rmdir "${_TMP}"
       ;;
     git|svn)
       # check upstream exists (required)
