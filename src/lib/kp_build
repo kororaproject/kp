@@ -101,6 +101,9 @@ function generate_spec {
 
 function gather_source {
   _debug "Gathering source ..."
+
+  _RET=0
+
   case ${KP_UPSTREAM_SRC_TYPE} in
     bare)
       # no source files
@@ -112,7 +115,12 @@ function gather_source {
       _TMP=$(mktemp --tmpdir -d "spec-download.XXXXXX")
       _pushd "${_TMP}"
       spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "."
-      mv * "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
+      if [ ${?} -eq 0 ];
+      then
+        mv * "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
+      else
+        _RET=1
+      fi
       _popd
 
       # clean up now empty dir
@@ -122,8 +130,8 @@ function gather_source {
       # check upstream exists (required)
       if [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" ]
       then
+        _RET=1
         _error "The package has not been checked out."
-        return 1
       fi
       ;;
     local)
@@ -133,19 +141,21 @@ function gather_source {
         _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream"
 
         _debug "Creating (local) source tarball ..."
-        git archive --format=tar.gz --prefix="${KP_NAME}-${KP_VERSION}/" -o "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/${KP_NAME}-${KP_VERSION}.tar.gz" HEAD
+        git archive --format=tar.gz --prefix="${KP_NAME}-${KP_VERSION}/" -o "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/${KP_NAME}-${KP_VERSION}.tar.gz" HEAD || _RET=1
 
         _popd
       else
         _error "Not a valid local package. Upstream is not available."
-        exit 1
+        _RET=1
       fi
       ;;
     *)
       _error "Not a valid source type."
-      exit 1
+      _RET=1
       ;;
   esac
+
+  return ${_RET}
 }
 
 function mock_build {
