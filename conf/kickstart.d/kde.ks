@@ -2,15 +2,24 @@
 # To use this for 32bit build, :4,$s/x86_64/i386/g
 # and build with 'setarch i686 livecd-creator ...'
 
+#
+# KP:DESCRIPTION:START
+#
+# var KP_RELEASE_META_LABEL=kde
+#
+#
+# KP:DESCRIPTION:END
+#
 
-%include /home/chris/code/kororaa/kickstart/fedora-live-base.ks
+
+%include /usr/share/spin-kickstarts/fedora-live-kde.ks
 
 #version=DEVEL
 install
 
 #install system from the net, to get latest updates
-#url --url=ftp://mirror.internode.on.net/pub/fedora/linux/releases/17/Fedora/x86_64/os/
-url --url=ftp://mirror.internode.on.net/pub/fedora/linux/development/17/x86_64/os/
+#url --url=ftp://mirror.internode.on.net/pub/fedora/linux/releases/%%KP_VERSION%%/Fedora/x86_64/os/
+url --url=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/
 
 lang en_AU.UTF-8
 keyboard us
@@ -38,24 +47,37 @@ part / --size 7178 --fstype ext4
 #logvol swap --name=swap --vgname=system --grow --size=1024 --maxsize=2048
 #bootloader --location=mbr --driveorder=sda --append="rhgb quiet"
 
-#Repos
-repo --name="Adobe Systems Incorporated" --baseurl=http://linuxdownload.adobe.com/linux/x86_64/ --cost=1000
-repo --name="Fedora 17 - x86_64" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/releases/17/Everything/x86_64/os/ --cost=1000
-#repo --name="Fedora 17 - x86_64 - Updates" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/updates/17/x86_64/ --cost=1000
-repo --name="Fedora 17 - x86_64 - Updates" --baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/17/x86_64/ --cost=1000
-repo --name="Google Chrome" --baseurl=http://dl.google.com/linux/chrome/rpm/stable/x86_64/ --cost=1000
-repo --name="Kororaa" --baseurl=file:///home/chris/repos/kororaa/releases/17/x86_64/ --cost=10
-#repo --name="Kororaa Testing" --baseurl=file:///home/chris/repos/kororaa/testing/17/x86_64/ --cost=5
-#repo --name="Ksplice Uptrack for Fedora" --baseurl=http://www.ksplice.com/yum/uptrack/fedora/17/x86_64/ --cost=1000
-repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/releases/17/Everything/x86_64/os/ --cost=1000
-repo --name="RPMFusion Free - Updates" --baseurl=http://download1.rpmfusion.org/free/fedora/updates/17/x86_64/ --cost=1000
-repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/releases/17/Everything/x86_64/os/ --cost=1000
-repo --name="RPMFusion Non-Free - Updates" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/updates/17/x86_64/ --cost=1000
-repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/17/x86_64/ --cost=1000
+#
+# REPOS
+#
+
+repo --name="Adobe Systems Incorporated" --baseurl=http://linuxdownload.adobe.com/linux/%%KP_BASEARCH%%/ --cost=1000
+
+repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%%" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Google Chrome" --baseurl=http://dl.google.com/linux/chrome/rpm/stable/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Korora %%KP_VERSION%%" --baseurl=file://%%KP_REPOSITORY_DIR%%/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=10
+
+#repo --name="Kororaa Testing" --baseurl=file:///home/chris/repos/kororaa/testing/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=5
+#repo --name="Ksplice Uptrack for Fedora" --baseurl=http://www.ksplice.com/yum/uptrack/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+
+repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Free - Updates" --baseurl=http://download1.rpmfusion.org/free/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+
+repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Non-Free - Updates" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+
+#
+# PACKAGES
+#
 
 %packages
 @admin-tools
-@base
+@critical-path-base
 @base-x
 @british-support
 @core
@@ -89,20 +111,23 @@ virtualbox-release
 -fedora-logos
 -fedora-release
 -fedora-release-notes
-kororaa-extras
-kororaa-release
-kororaa-logos
-#kororaa-package-config-apt
-kororaa-release-notes
+korora-extras
+korora-release
+korora-logos
+#korora-package-config-apt
+korora-release-notes
 adwaita-gtk3-theme
 
 #Package for checksumming livecd on boot, installer, memtest
+anaconda-widgets
 anaconda
 isomd5sum
 
 #Extra packages
 #add-remove-extras
 akmods
+alsa-utils
+alsa-plugins-pulseaudio
 apper
 backintime-kde
 bash-completion
@@ -112,6 +137,7 @@ bluedevil
 btrfs-progs
 calibre
 choqok
+chrony
 cups-pdf
 #deja-dup
 desktop-backgrounds-basic
@@ -121,6 +147,10 @@ elementary-icon-theme
 elementary-gtk
 expect
 firefox
+*firmware*
+libXft-infinality
+freetype-infinality
+fontconfig-infinality
 font-manager
 fprintd-pam
 frei0r-plugins
@@ -163,7 +193,7 @@ kde-plasma-networkmanagement-pptp
 kdiff3
 -kdemultimedia-dragonplayer
 konversation
-kororaa-settings-kde
+korora-settings-kde
 #kpackagekit
 krename
 krusader
@@ -189,13 +219,15 @@ libreoffice-writer
 libreoffice-xsltfilter
 linphone
 liveusb-creator
+mtpfs
+mlocate
 mozilla-adblock-plus
 mozilla-flashblock
 mozilla-oxygen-kde
 #mozilla-plasma-notify
 mozilla-xclear
 mozilla-downthemall
-ntp
+-ntp
 p7zip
 p7zip-plugins
 PackageKit-browser-plugin
@@ -203,9 +235,11 @@ PackageKit-command-not-found
 planner
 policycoreutils-gui
 polkit-desktop-policy
+prelink
 pybluez
 qtcurve-kde4
 qtcurve-gtk2
+rawtherapee
 samba
 samba-winbind
 sane-backends
@@ -215,7 +249,7 @@ skanlite
 -synaptic
 system-config-lvm
 system-config-printer
-system-config-printer-kde
+-system-config-printer-kde
 vim
 vlc
 vlc-extras
@@ -246,6 +280,7 @@ gstreamer-plugins-bad-nonfree
 gstreamer-plugins-good
 gstreamer-plugins-ugly
 kid3
+kio_mtp
 lame
 libmpg123
 #Miro
@@ -296,15 +331,7 @@ echo "****BUILDING AKMODS****"
 /usr/sbin/akmods --force
 
 #Import keys
-for x in fedora ksplice kororaa livna adobe-linux rpmfusion-free-fedora-14-primary rpmfusion-nonfree-fedora-14-primary rpmfusion-free-fedora-15-primary rpmfusion-nonfree-fedora-15-primary rpmfusion-free-fedora-17-primary rpmfusion-nonfree-fedora-17-primary ; do rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-$x ; done
-#Chrome (this should prob just go in the repo file instead)
-wget https://dl-ssl.google.com/linux/linux_signing_key.pub
-rpm --import linux_signing_key.pub
-rm linux_signing_key.pub
-#VirtualBox
-wget http://download.virtualbox.org/virtualbox/debian/oracle_vbox.asc
-rpm --import oracle_vbox.asc
-rm oracle_vbox.asc
+for x in google-chrome virtualbox fedora ksplice korora livna adobe rpmfusion-free-fedora-17-primary rpmfusion-nonfree-fedora-17-primary rpmfusion-free-fedora-18-primary rpmfusion-nonfree-fedora-18-primary ; do rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-$x ; done
 
 #KDE - stop Klipper from starting
 sed -i 's/AutoStart:true/AutoStart:false/g' /usr/share/autostart/klipper.desktop
@@ -333,10 +360,21 @@ include "/usr/share/themes/oxygen-gtk/gtk-2.0/gtkrc"
 include "/etc/gtk-2.0/gtkrc"
 gtk-theme-name="oxygen-gtk"
 EOF
+mkdir -p /root/.config/gtk-3.0
+cat > /root/.config/gtk-3.0/settings.ini << EOF
+[Settings]
+gtk-theme-name = oxygen-gtk
+EOF
 
 #LiveCD stuff (like creating user) is done by fedora-live-base.ks
 #Modify LiveCD stuff, i.e. set autologin, enable installer (this is done in /etc/rc.d/init.d/livesys)
 cat >> /etc/rc.d/init.d/livesys << EOF
+if [ -e /usr/share/icons/hicolor/96x96/apps/fedora-logo-icon.png ] ; then
+    # use image also for kdm
+    mkdir -p /usr/share/apps/kdm/faces
+    cp /usr/share/icons/hicolor/96x96/apps/fedora-logo-icon.png /usr/share/apps/kdm/faces/fedora.face.icon
+fi
+
 # make liveuser use KDE
 echo "startkde" > /home/liveuser/.xsession
 chmod a+x /home/liveuser/.xsession
@@ -372,7 +410,7 @@ cat > /home/liveuser/.config/akonadi/akonadiserverrc << AKONADI_EOF
 Driver=QSQLITE3
 AKONADI_EOF
 
-# Disable the update notifications of kpackagekit
+## Disable the update notifications of kpackagekit
 cat > /usr/share/kde-settings/kde-profile/default/share/config/KPackageKit << KPACKAGEKIT_EOF
 [CheckUpdate]
 autoUpdate=0
@@ -391,12 +429,25 @@ interval=0
 APPER_EOF
 
 # Disable kres-migrator
+cat > /home/liveuser/.kde/share/config/kres-migratorrc << KRES_EOF
+[Migration]
+Enabled=false
+KRES_EOF
+
 cat > /usr/share/kde-settings/kde-profile/default/share/config/kres-migratorrc << KRES_EOF
 [Migration]
 Enabled=false
 KRES_EOF
 
 # Disable nepomuk
+cat > /home/liveuser/.kde/share/config/nepomukserverrc << NEPOMUK_EOF
+[Basic Settings]
+Start Nepomuk=false
+
+[Service-nepomukstrigiservice]
+autostart=false
+NEPOMUK_EOF
+
 cat > /usr/share/kde-settings/kde-profile/default/share/config/nepomukserverrc << NEPOMUK_EOF
 [Basic Settings]
 Start Nepomuk=false
@@ -463,7 +514,7 @@ EOF
 
 #yum check-update
 #yum -y update
-#yum -y reinstall kororaa-extras kororaa-settings-kde
+#yum -y reinstall korora-extras korora-settings-kde
 #yum -y reinstall jockey jockey-kde jockey-selinux
 #rm -f /var/log/yum.log
 
