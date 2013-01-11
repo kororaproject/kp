@@ -140,6 +140,13 @@ function parse_args {
 #
 
 function main {
+  # must be root to run
+  if test is_root
+  then
+    _error "You must be root to build a release ISO."
+    exit 1
+  fi
+
   # check if we're listing
   if [ -n "${OPT_LIST}" ]
   then
@@ -168,8 +175,10 @@ function main {
       _info "  - Version:      ${OPT_RELEASE_VERSION}"
       _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
 
+      _FILE="korora-${OPT_RELEASE_VERSION}-${R}-live"
+
       # create working directory
-      _TEMPLATE="/tmp/${R}.${RANDOM}"
+      _TEMPLATE="/tmp/${_FILE}.${RANDOM}"
 
       _info "Preparing release template: ${_TEMPLATE}"
 
@@ -177,7 +186,7 @@ function main {
       _template_inflate "${_TEMPLATE}" "${CONFIG_DIR}/kickstart.d/${R}.ks"
 
       # create the CD
-      livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="korora-${OPT_RELEASE_VERSION}-live" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}"
+      livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}"
 
       # clean up our inflated template file
       #rm -f "${_TEMPLATE}"
