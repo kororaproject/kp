@@ -20,7 +20,6 @@
 # INTIALISE
 #
 OPT_VERBOSE=
-OPT_LIST=
 OPT_USB=
 OPT_ISO=1
 
@@ -57,10 +56,9 @@ function usage {
   _EXIT_VAL=${1:-0}
 
   cat << EOF
-Usage: $0 release [options]
+Usage: $0 release [options] [release ... releaseN]
 
 Options:
-  -l   List available kickstarts to build
   -t   Set the release title
   -r   Set the release version
   -n   Set the release codename
@@ -69,7 +67,6 @@ Options:
   -V   Show version
 
 Long Options:
-  --list              Same as -l
   --release-title     Same as -t
   --release-version   Same as -r
   --release-codename  Same as -n
@@ -95,9 +92,6 @@ function parse_args {
   while [ $# -gt 0 ]
   do
     case "$1" in
-      -l|--list)
-        OPT_LIST=1
-        ;;
       -v|--verbose)
         OPT_VERBOSE=1
         ;;
@@ -147,50 +141,38 @@ function main {
     exit 1
   fi
 
-  # check if we're listing
-  if [ -n "${OPT_LIST}" ]
+  _VERBOSE=
+
+  if [ ! -z ${OPT_VERBOSE} ]
   then
-    _info "Korora Releases:"
-    for L in $(list_kickstart_available)
-    do
-      _info "  - ${L}"
-
-    done
-  # otherwise we must be building
-  else
-    _VERBOSE=
-
-    if [ ! -z ${OPT_VERBOSE} ]
-    then
-      _VERBOSE="--version"
-    fi
-
-    # build all requested releases
-    for R in $(list_kickstart_available "${RELEASES}")
-    do
-
-      #
-      _info "Preparing to build: $R"
-      _info "  - Codename:     ${OPT_RELEASE_CODENAME}"
-      _info "  - Version:      ${OPT_RELEASE_VERSION}"
-      _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
-
-      _FILE="korora-${OPT_RELEASE_VERSION}-${R}-live"
-
-      # create working directory
-      _TEMPLATE="/tmp/${_FILE}.${RANDOM}"
-
-      _info "Preparing release template: ${_TEMPLATE}"
-
-      #
-      _template_inflate "${_TEMPLATE}" "${CONFIG_DIR}/kickstart.d/${R}.ks"
-
-      # create the CD
-      livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}"
-
-      # clean up our inflated template file
-      #rm -f "${_TEMPLATE}"
-    done
+    _VERBOSE="--version"
   fi
+
+  # build all requested releases
+  for R in $(list_kickstart_available "${RELEASES}")
+  do
+
+    #
+    _info "Preparing to build: $R"
+    _info "  - Codename:     ${OPT_RELEASE_CODENAME}"
+    _info "  - Version:      ${OPT_RELEASE_VERSION}"
+    _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
+
+    _FILE="korora-${OPT_RELEASE_VERSION}-${R}-live"
+
+    # create working directory
+    _TEMPLATE="/tmp/${_FILE}.${RANDOM}"
+
+    _info "Preparing release template: ${_TEMPLATE}"
+
+    #
+    _template_inflate "${_TEMPLATE}" "${CONFIG_DIR}/kickstart.d/${R}.ks"
+
+    # create the CD
+    livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}"
+
+    # clean up our inflated template file
+    #rm -f "${_TEMPLATE}"
+  done
 }
 

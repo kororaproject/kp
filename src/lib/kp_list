@@ -49,7 +49,7 @@ Package status codes:
   S    Synchronised with upstream
   M    Local modifications
 
-Upstream status codes:
+Package upstream status codes:
        Package is not checked out
   -    Upsream available but not checkout out.
   S    Synchronised with upstream
@@ -102,7 +102,7 @@ function parse_args {
   PACKAGES=""
   if [ $# -eq 0 ]
   then
-    echo "Building all packages ..."
+    echo "Listing all packages/kickstarts ..."
   else
     while [ $# -gt 0 ]
     do
@@ -141,5 +141,13 @@ function main {
 
     # reset the input field seperator
     unset IFS
+  done
+
+  echo
+
+  _info "Korora Releases:"
+  for L in $(list_kickstart_available ${PACKAGES})
+  do
+    _info " -   ${L}"
   done
 }

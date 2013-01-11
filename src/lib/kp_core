@@ -22,6 +22,12 @@
 # GENERAL
 #
 
+function is_root {
+  [ "$(id -u)" -eq 0 ] && return 0
+
+  return 1
+}
+
 function _machine_basearch {
   echo $(uname -m)
 }
@@ -285,7 +291,7 @@ function print_config_details {
 #
 
 function list_kickstart_available {
-  _KICKSTARTS=${1:-}
+  _KICKSTARTS=( ${1:-} )
   _FILES=
 
   for K in $(ls -1 ${CONFIG_DIR}/kickstart.d/*.ks)
@@ -294,12 +300,18 @@ function list_kickstart_available {
     _FILE=${_FILE%.ks}
 
     # skip if this is not requested
-    if [ -n "${_KICKSTARTS}" ]
+    if [ ${#_KICKSTARTS[@]} -eq 0 ]
     then
-      echo ${_KICKSTARTS} | grep -q ${_FILE} || continue
+      _FILES="${_FILES} ${_FILE}"
+    else
+      for K in "${_KICKSTARTS[@]}"
+      do
+        if [ "${K}" == "${_FILE}" ]
+        then
+          _FILES="${_FILES} ${_FILE}"
+        fi
+      done
     fi
-
-    _FILES="${_FILES} ${_FILE}"
   done
 
   echo ${_FILES}
