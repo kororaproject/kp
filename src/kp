@@ -52,7 +52,7 @@ else
         SUB_COMMAND=checkout
         ;;
       release|--release)
-        SUB_COMMAND=relese
+        SUB_COMMAND=release
         ;;
       --config*)
         if [ ${#1} -eq 8 ]
