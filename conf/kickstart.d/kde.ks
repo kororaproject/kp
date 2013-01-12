@@ -107,23 +107,26 @@ rpmfusion-free-release
 rpmfusion-nonfree-release
 virtualbox-release
 
-#Rebranding
+# (RE)BRANDING
 -fedora-logos
 -fedora-release
 -fedora-release-notes
 korora-extras
 korora-release
 korora-logos
-#korora-package-config-apt
 korora-release-notes
+
+elementary-gtk
+elementary-icon-theme
 adwaita-gtk3-theme
 
 #Package for checksumming livecd on boot, installer, memtest
-anaconda-widgets
 anaconda
+anaconda-widgets
 isomd5sum
 
-#Extra packages
+#
+# EXTRA PACKAGES
 #add-remove-extras
 akmods
 alsa-utils
@@ -143,8 +146,6 @@ cups-pdf
 desktop-backgrounds-basic
 dolphin-root-actions
 eekboard
-elementary-icon-theme
-elementary-gtk
 expect
 firefox
 *firmware*
@@ -222,11 +223,11 @@ liveusb-creator
 mtpfs
 mlocate
 mozilla-adblock-plus
+mozilla-downthemall
 mozilla-flashblock
 mozilla-oxygen-kde
 #mozilla-plasma-notify
 mozilla-xclear
-mozilla-downthemall
 -ntp
 p7zip
 p7zip-plugins
@@ -245,17 +246,11 @@ samba-winbind
 sane-backends
 screen
 skanlite
--smolt-firstboot
 -synaptic
 system-config-lvm
 system-config-printer
 -system-config-printer-kde
 vim
-vlc
-vlc-extras
-xine-lib-extras
-xine-lib-extras-freeworld
-xine-plugin
 xorg-x11-apps
 xscreensaver-gl-extras
 xscreensaver-extras
@@ -268,7 +263,9 @@ yum-plugin-priorities
 yum-plugin-security
 yum-updatesd
 
-#Multimedia (KDE will use Xine by default, but also suport Gstreamer)
+#
+# MULTIMEDIA
+# Note: KDE will use Xine by default, but also support Gstreamer
 audacity-freeworld
 faac
 flac
@@ -287,16 +284,22 @@ libmpg123
 PackageKit-gstreamer-plugin
 pavucontrol
 phonon-backend-vlc
+vlc
+vlc-extras
 vorbis-tools
 xine-lib-extras
 xine-lib-extras-freeworld
+xine-plugin
+xine-lib-extras
+xine-lib-extras-freeworld
 
-#Flash deps - new flash meta-rpm should take care of these
+#Flash deps - new  meta-rpm should take care of these
 #pulseaudio-libs.i686
 #alsa-plugins-pulseaudio.i686
 #libcurl.i686
 #nspluginwrapper.i686
 
+#
 #Development tools for out of tree modules
 gcc
 kernel-devel
@@ -308,7 +311,6 @@ time
 #akmod-rt2870
 #akmod-rt3070
 #akmod-VirtualBox-OSE
-#VirtualBox-OSE-guest
 #akmod-wl #(I don't think this is GPLv2!)
 #kmod-staging
 #mesa-dri-drivers-experimental
@@ -331,7 +333,7 @@ echo "****BUILDING AKMODS****"
 /usr/sbin/akmods --force
 
 #Import keys
-for x in google-chrome virtualbox fedora ksplice korora livna adobe rpmfusion-free-fedora-17-primary rpmfusion-nonfree-fedora-17-primary rpmfusion-free-fedora-18-primary rpmfusion-nonfree-fedora-18-primary ; do rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-$x ; done
+for x in fedora google-chrome virtualbox korora livna adobe rpmfusion-free-fedora-17-primary rpmfusion-nonfree-fedora-17-primary rpmfusion-free-fedora-18-primary rpmfusion-nonfree-fedora-18-primary ; do rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-$x ; done
 
 #KDE - stop Klipper from starting
 sed -i 's/AutoStart:true/AutoStart:false/g' /usr/share/autostart/klipper.desktop

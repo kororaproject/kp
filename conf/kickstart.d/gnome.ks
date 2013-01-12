@@ -101,7 +101,7 @@ kernel
 kernel-modules-extra
 memtest86+
 
-# grub-efi and grub2 and efibootmgr so anaconda can use the right one on install. 
+# grub-efi and grub2 and efibootmgr so anaconda can use the right one on install.
 grub-efi
 grub2
 efibootmgr
@@ -118,15 +118,15 @@ rpmfusion-free-release
 rpmfusion-nonfree-release
 virtualbox-release
 
-#Rebranding
+# (RE)BRANDING
 -fedora-logos
 -fedora-release
 -fedora-release-notes
 korora-extras
 korora-release
 korora-logos
-#kororaa-package-config-apt
 korora-release-notes
+
 elementary-gtk
 elementary-icon-theme
 
@@ -135,7 +135,8 @@ anaconda
 anaconda-widgets
 isomd5sum
 
-#Extra packages
+#
+# EXTRA PACKAGES
 #add-remove-extras
 akmods
 alacarte
@@ -213,10 +214,7 @@ java-1.7.0-openjdk
 jockey
 jockey-gtk
 jockey-selinux
-#k3b
-#k3b-extras-freeworld
 korora-settings-gnome
-#New libreoffice from Fedora repos
 libreoffice-calc
 libreoffice-draw
 libreoffice-emailmerge
@@ -271,6 +269,7 @@ pcsc-lite-ccid
 planner
 polkit-desktop-policy
 prelink
+pybluez
 samba
 samba-winbind
 sane-backends
@@ -278,7 +277,6 @@ screen
 shotwell
 simple-scan
 -smartmontools
--smolt-firstboot #TODO: remove?
 #synaptic
 system-config-lvm
 system-config-printer
@@ -289,7 +287,6 @@ vim
 #vinagre
 #vino
 #wammu
-pybluez
 wget
 xfsprogs
 yumex
@@ -298,7 +295,8 @@ yum-plugin-priorities
 yum-plugin-security
 yum-updatesd
 
-#Multimedia
+#
+# MULTIMEDIA
 alsa-plugins-pulseaudio
 alsa-utils
 audacity-freeworld
@@ -367,6 +365,7 @@ xvidcore
 #libcurl.i686
 #nspluginwrapper.i686
 
+#
 #Development tools for out of tree modules
 gcc
 kernel-devel
@@ -386,7 +385,6 @@ time
 
 #%post --nochroot
 #umount $INSTALL_ROOT/var/cache/yum
-#
 #%end
 
 %post
@@ -394,7 +392,7 @@ time
 echo -e "\n*****\nPOST SECTION\n*****\n"
 
 #Set resolv.conf
-echo "nameserver 192.168.28.1" > /etc/resolv.conf
+echo "nameserver 192.168.28.1" >> /etc/resolv.conf
 
 #Build out of kernel modules (so it's not done on first boot)
 echo "****BUILDING AKMODS****"
