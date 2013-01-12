@@ -135,7 +135,7 @@ function parse_args {
 
 function main {
   # must be root to run
-  if test is_root
+  if [ "$(id -u)" -ne 0 ]
   then
     _error "You must be root to build a release ISO."
     exit 1
@@ -169,7 +169,7 @@ function main {
     _template_inflate "${_TEMPLATE}" "${CONFIG_DIR}/kickstart.d/${R}.ks"
 
     # create the CD
-    livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}"
+    livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
 
     # clean up our inflated template file
     #rm -f "${_TEMPLATE}"
