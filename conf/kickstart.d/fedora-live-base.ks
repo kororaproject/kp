@@ -210,7 +210,7 @@ if [ -n "\$configdone" ]; then
 fi
 
 # add fedora user with no passwd
-action "Adding live user" useradd \$USERADDARGS -c "Live User (password: liveuser)" liveuser
+action "Adding live user" useradd \$USERADDARGS -c "Live User (password is liveuser)" liveuser
 #passwd -d liveuser > /dev/null
 echo "liveuser" | passwd --stdin liveuser
 gpasswd -a liveuser wheel
