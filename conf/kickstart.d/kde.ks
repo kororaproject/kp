@@ -11,8 +11,7 @@
 # KP:DESCRIPTION:END
 #
 
-
-%include /usr/share/spin-kickstarts/fedora-live-kde.ks
+%include %%KP_KICKSTART_DIR%%/fedora-live-base.ks
 
 #version=DEVEL
 install
@@ -23,9 +22,7 @@ url --url=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSIO
 
 lang en_AU.UTF-8
 keyboard us
-#network --onboot yes --bootproto dhcp
 timezone --utc Australia/Sydney
-#rootpw  --iscrypted $6$D8V.j2ICJUxPjPEl$S.OjfjUxpIBfYKEMjSBolPPHGG1wLSIrihg75qvd1K34CUA7KfPC3fIzypVY/A4LSPs8uwG3joDXMiZ6vGaN40
 selinux --enforcing
 authconfig --enableshadow --passalgo=sha512 --enablefingerprint
 firewall --enabled --service=ssh,mdns,ipp-client,samba-client
@@ -35,24 +32,11 @@ services --enabled=NetworkManager --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmco
 #Partitioning, for Live CD
 part / --size 7178 --fstype ext4
 
-
-#Partitioning, for virtual machine testing
-#clearpart --all --drives=sda
-#
-#part /boot --fstype=ext4 --size=512
-#part pv.EaGFJm-w7pp-JMFF-02sd-ynAj-3bbx-Yj8Kfz --grow --size=512
-#
-#volgroup system --pesize=32768 pv.EaGFJm-w7pp-JMFF-02sd-ynAj-3bbx-Yj8Kfz
-#logvol / --fstype=ext4 --name=root --vgname=system --grow --size=1024 --maxsize=20480
-#logvol swap --name=swap --vgname=system --grow --size=1024 --maxsize=2048
-#bootloader --location=mbr --driveorder=sda --append="rhgb quiet"
-
 #
 # REPOS
 #
 
 repo --name="Adobe Systems Incorporated" --baseurl=http://linuxdownload.adobe.com/linux/%%KP_BASEARCH%%/ --cost=1000
-
 repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%%" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
 #repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
 repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
@@ -77,17 +61,15 @@ repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm
 
 %packages
 @admin-tools
-@critical-path-base
 @base-x
-@british-support
 @core
+@critical-path-base
 @dial-up
 @fonts
 @hardware-support
-selinux-policy
-selinux-policy-targeted
 @kde-desktop
 @printing
+@standard
 
 #Needed apparently
 kernel
@@ -99,18 +81,24 @@ grub-efi
 grub2
 efibootmgr
 
+# FIXME; apparently the glibc maintainers dislike this
+nss-mdns
+
 #Install 3rd party repo releases
 adobe-release
 google-chrome-release
+google-earth-release
+google-talkplugin-release
 #ksplice-uptrack
 rpmfusion-free-release
 rpmfusion-nonfree-release
 virtualbox-release
 
 # (RE)BRANDING
--fedora-logos
--fedora-release
--fedora-release-notes
+korora-backgrounds
+korora-backgrounds-kde
+korora-backgrounds-extras-kde
+-desktop-backgrounds-basic
 korora-extras
 korora-release
 korora-logos
@@ -142,8 +130,6 @@ calibre
 choqok
 chrony
 cups-pdf
-#deja-dup
-desktop-backgrounds-basic
 dolphin-root-actions
 eekboard
 expect
@@ -167,13 +153,13 @@ inkscape
 jack-audio-connection-kit
 java-1.7.0-openjdk
 #java-1.7.0-openjdk-plugin
-# jockey moved to end to work around selinux issue
 jockey
 jockey-kde
 jockey-selinux
 k3b-extras-freeworld
 kamoso
 kaudiocreator
+kde-l10n-*
 kdeartwork
 kdeartwork-wallpapers
 kdebase-workspace-ksplash-themes
@@ -183,7 +169,7 @@ kdegames-minimal
 kdenlive
 #kde-partitionmanager #broken deps atm
 kde-settings
--kde-settings-pulseaudio
+kde-settings-pulseaudio
 kde-settings-ksplash
 kde-settings-plasma
 kdemultimedia-extras-freeworld
@@ -195,7 +181,6 @@ kdiff3
 -kdemultimedia-dragonplayer
 konversation
 korora-settings-kde
-#kpackagekit
 krename
 krusader
 libdvdcss
@@ -248,8 +233,9 @@ screen
 skanlite
 -synaptic
 system-config-lvm
-system-config-printer
+-system-config-printer
 -system-config-printer-kde
+kde-print-manager
 vim
 xorg-x11-apps
 xscreensaver-gl-extras
@@ -261,6 +247,8 @@ yumex
 #yum-plugin-fastestmirror
 yum-plugin-priorities
 yum-plugin-security
+yum-plugin-refresh-updatesd
+yum-plugin-versionlock
 yum-updatesd
 
 #
@@ -280,7 +268,7 @@ kid3
 kio_mtp
 lame
 libmpg123
-#Miro
+Miro
 PackageKit-gstreamer-plugin
 pavucontrol
 phonon-backend-vlc
@@ -306,27 +294,11 @@ kernel-devel
 dkms
 time
 
-#Out of kernel GPL drivers
-#akmod-rt2860
-#akmod-rt2870
-#akmod-rt3070
-#akmod-VirtualBox-OSE
-#akmod-wl #(I don't think this is GPLv2!)
-#kmod-staging
-#mesa-dri-drivers-experimental
-
 %end
-
-#%post --nochroot
-#umount $INSTALL_ROOT/var/cache/yum
-#%end
 
 %post
 
 echo -e "\n*****\nPOST SECTION\n*****\n"
-
-#Set resolv.conf
-echo "nameserver 192.168.28.1" >> /etc/resolv.conf
 
 #Build out of kernel modules (so it's not done on first boot)
 echo "****BUILDING AKMODS****"
@@ -411,17 +383,6 @@ cat > /home/liveuser/.config/akonadi/akonadiserverrc << AKONADI_EOF
 [%General]
 Driver=QSQLITE3
 AKONADI_EOF
-
-## Disable the update notifications of kpackagekit
-cat > /usr/share/kde-settings/kde-profile/default/share/config/KPackageKit << KPACKAGEKIT_EOF
-[CheckUpdate]
-autoUpdate=0
-interval=0
-
-[Notify]
-notifyLongTasks=2
-notifyUpdates=0
-KPACKAGEKIT_EOF
 
 # Disable the update notifications of apper 
 cat > /home/liveuser/.kde/share/config/apper << APPER_EOF
@@ -514,31 +475,4 @@ sed -i s/NoDisplay=true/NoDisplay=false/g /usr/local/share/applications/liveinst
 
 EOF
 
-#yum check-update
-#yum -y update
-#yum -y reinstall korora-extras korora-settings-kde
-#yum -y reinstall jockey jockey-kde jockey-selinux
-#rm -f /var/log/yum.log
-
-#build yum db
-#yum clean all
-#yum check-update
-#yum -y update
-#yum provides */fake123
-#rm -f /var/log/yum.log
-
-pkcon get-packages
-pkcon get-categories
-
-echo waiting...
-sleep 30
-
-#Finally, clean up resolv.conf hack
-echo "" > /etc/resolv.conf
-
 %end
-
-#%post --nochroot
-#mount --bind /var/cache/yum $INSTALL_ROOT/var/cache/yum
-#
-#%end

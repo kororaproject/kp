@@ -7,6 +7,50 @@
 # Does includes "default" language configuration (kickstarts including
 # this template can override these settings)
 
+lang en_US.UTF-8
+keyboard us
+timezone US/Eastern
+auth --useshadow --enablemd5
+selinux --enforcing
+firewall --enabled --service=mdns
+xconfig --startxonboot
+part / --size 3072 --fstype ext4
+services --enabled=NetworkManager --disabled=network,sshd
+
+#repo --name=rawhide --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
+repo --name=fedora --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
+repo --name=updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
+#repo --name=updates-testing --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-testing-f$releasever&arch=$basearch
+
+%packages
+@base-x
+@standard
+@core
+@fonts
+@input-methods
+@dial-up
+-@multimedia
+@hardware-support
+@printing
+
+# Explicitly specified here:
+# <notting> walters: because otherwise dependency loops cause yum issues.
+kernel
+
+# This was added a while ago, I think it falls into the category of
+# "Diagnosis/recovery tool useful from a Live OS image".  Leaving this untouched
+# for now.
+memtest86+
+
+# The point of a live image is to install
+anaconda
+@anaconda-tools
+
+# fpaste is very useful for debugging and very small
+fpaste
+
+%end
+
 %post
 # FIXME: it'd be better to get this installed from a package
 cat > /etc/rc.d/init.d/livesys << EOF
@@ -39,6 +83,10 @@ ln -sf /dev/null /etc/systemd/system/hwclock-save.service
 
 livedir="LiveOS"
 for arg in \`cat /proc/cmdline\` ; do
+  if [ "\${arg##rd.live.dir=}" != "\${arg}" ]; then
+    livedir=\${arg##rd.live.dir=}
+    return
+  fi
   if [ "\${arg##live_dir=}" != "\${arg}" ]; then
     livedir=\${arg##live_dir=}
     return
@@ -115,17 +163,17 @@ fi
 # make it so that we don't do writing to the overlay for things which
 # are just tmpdirs/caches
 mount -t tmpfs -o mode=0755 varcacheyum /var/cache/yum
-mount -t tmpfs tmp /tmp
 mount -t tmpfs vartmp /var/tmp
-[ -x /sbin/restorecon ] && /sbin/restorecon /var/cache/yum /tmp /var/tmp >/dev/null 2>&1
+[ -x /sbin/restorecon ] && /sbin/restorecon /var/cache/yum /var/tmp >/dev/null 2>&1
 
 if [ -n "\$configdone" ]; then
   exit 0
 fi
 
 # add fedora user with no passwd
-action "Adding live user" useradd \$USERADDARGS -c "Live System User" liveuser
-passwd -d liveuser > /dev/null
+action "Adding live user" useradd \$USERADDARGS -c "Live User (password: liveuser)" liveuser
+#passwd -d liveuser > /dev/null
+echo "liveuser" | passwd --stdin liveuser
 gpasswd -a liveuser wheel
 
 # turn off firstboot for livecd boots
@@ -237,6 +285,9 @@ chmod 755 /etc/rc.d/init.d/livesys-late
 /sbin/restorecon /etc/rc.d/init.d/livesys-late
 /sbin/chkconfig --add livesys-late
 
+# enable tmpfs for /tmp
+systemctl enable tmp.mount
+
 # work around for poor key import UI in PackageKit
 rm -f /var/lib/rpm/__db*
 rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-fedora
@@ -261,7 +312,19 @@ rm -f /core*
 
 %post --nochroot
 cp $INSTALL_ROOT/usr/share/doc/*-release-*/GPL $LIVE_ROOT/GPL
-cp /home/chris/code/kororaa/doco/README $LIVE_ROOT/README
+cat > $LIVE_ROOT/README.txt << EOF
+Thank you for downloading Korora!
+
+This is a Live DVD, simply reboot your computer to run from this DVD.
+
+To install Kororaa, simply run the installer on the desktop or in the left menu (under GNOME).
+
+Please provide us with feedback and any suggestions at http://kororaproject.org
+
+Enjoy!
+
+Note: The Korora Project is not provided or supported by the Fedora Project. Official, unmodified Fedora software is available through the Fedora Project website (http://fedoraproject.org).
+EOF
 
 # only works on x86, x86_64
 if [ "$(uname -i)" = "i386" -o "$(uname -i)" = "x86_64" ]; then

@@ -11,8 +11,6 @@
 # KP:DESCRIPTION:END
 #
 
-
-
 %include %%KP_KICKSTART_DIR%%/fedora-live-base.ks
 
 #version=DEVEL
@@ -24,9 +22,7 @@ url --url=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSIO
 
 lang en_AU.UTF-8
 keyboard us
-#network --onboot yes --device eth0 --bootproto dhcp --noipv6
 timezone --utc Australia/Sydney
-#rootpw  --iscrypted $6$D8V.j2ICJUxPjPEl$S.OjfjUxpIBfYKEMjSBolPPHGG1wLSIrihg75qvd1K34CUA7KfPC3fIzypVY/A4LSPs8uwG3joDXMiZ6vGaN40
 selinux --enforcing
 authconfig --enableshadow --passalgo=sha512 --enablefingerprint
 firewall --enabled --service=ssh,mdns,ipp-client,samba-client
@@ -36,24 +32,11 @@ services --enabled=NetworkManager,lirc --disabled=abrtd,abrt-ccpp,abrt-oops,abrt
 #Partitioning, for Live CD
 part / --size 7188 --fstype ext4
 
-
-#Partitioning, for virtual machine testing
-#clearpart --all --drives=sda
-#
-#part /boot --fstype=ext4 --size=512
-#part pv.EaGFJm-w7pp-JMFF-02sd-ynAj-3bbx-Yj8Kfz --grow --size=512
-#
-#volgroup system --pesize=32768 pv.EaGFJm-w7pp-JMFF-02sd-ynAj-3bbx-Yj8Kfz
-#logvol / --fstype=ext4 --name=root --vgname=system --grow --size=1024 --maxsize=20480
-#logvol swap --name=swap --vgname=system --grow --size=1024 --maxsize=2048
-#bootloader --location=mbr --driveorder=sda --append="rhgb quiet"
-
 #
 # REPOS
 #
 
 repo --name="Adobe Systems Incorporated" --baseurl=http://linuxdownload.adobe.com/linux/%%KP_BASEARCH%%/ --cost=1000
-
 repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%%" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
 #repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
 repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
@@ -78,23 +61,23 @@ repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm
 
 %packages
 @admin-tools
+@cinnamon-desktop-environment
 @critical-path-base
 @base-x
-@british-support
 @core
 @dial-up
+@firefox
 @fonts
 @hardware-support
-selinux-policy
-selinux-policy-targeted
 @gnome-desktop
 @gnome-games
+@input-methods
+#@mate-desktop-environment
+-@multimedia
+@libreoffice
 @online-docs
 @printing
-@input-methods
--ibus-pinyin-db-open-phrase
-ibus-pinyin-db-android
-#@office
+@standard
 
 #Needed apparently
 kernel
@@ -113,15 +96,17 @@ nss-mdns
 #Install 3rd party repo releases
 adobe-release
 google-chrome-release
+google-earth-release
+google-talkplugin-release
 #ksplice-uptrack
 rpmfusion-free-release
 rpmfusion-nonfree-release
 virtualbox-release
 
 # (RE)BRANDING
--fedora-logos
--fedora-release
--fedora-release-notes
+korora-backgrounds
+korora-backgrounds-gnome
+korora-backgrounds-extras-gnome
 korora-extras
 korora-release
 korora-logos
@@ -137,9 +122,8 @@ isomd5sum
 
 #
 # EXTRA PACKAGES
-#add-remove-extras
 akmods
-alacarte
+-alacarte
 argyllcms
 bash-completion
 beesu
@@ -147,7 +131,6 @@ beesu
 brltty
 btrfs-progs
 chrony
-cinnamon
 control-center
 cups-pdf
 dconf-editor
@@ -173,11 +156,7 @@ git
 gnome-disk-utility
 gnome-games*
 gnome-lirc-properties
-#gnome-packagekit-extra
 gnome-packagekit
-#gnome-shell
-#gnome-shell-extension-*
-#gnome-shell-extensions-mgse-*
 -gnome-shell-extension-gpaste
 -gnome-shell-extension-pidgin
 #gnome-shell-extension-apps-menu
@@ -192,11 +171,12 @@ gnome-shell-extension-places-menu
 -gnome-shell-extension-native-window-placement
 gnome-shell-extension-presentation-mode
 gnome-shell-extension-xrandr-indicator
+gnome-shell-extension-weather
 gnome-shell-theme-*
 gnome-system-log
 gnome-tweak-tool
 gnote
-#gloobus-preview
+gloobus-preview
 
 gparted
 gpgme
@@ -206,6 +186,8 @@ gvfs-obexftp
 gwibber
 hardlink
 htop
+-ibus-pinyin-db-open-phrase
+ibus-pinyin-db-android
 inkscape
 iok
 jack-audio-connection-kit
@@ -249,17 +231,23 @@ nautilus-open-terminal
 #nautilus-pastebin
 #nautilus-search-tool
 nautilus-sendto
+nautilus-sound-converter
 ncftp
 #NetworkManager-gnome
+network-manager-applet
+NetworkManager-l2tp
 NetworkManager-openconnect
 NetworkManager-openswan
 NetworkManager-openvpn
 NetworkManager-pptp
 NetworkManager-vpnc
 NetworkManager-wimax
+strongswan-NetworkManager
+libproxy-networkmanager
 -ntp
 p7zip
 p7zip-plugins
+PackageKit-browser-plugin
 PackageKit-command-not-found
 PackageKit-gtk3-module
 pcsc-lite
@@ -293,6 +281,8 @@ yumex
 #yum-plugin-fastestmirror
 yum-plugin-priorities
 yum-plugin-security
+yum-plugin-refresh-updatesd
+yum-plugin-versionlock
 yum-updatesd
 
 #
@@ -329,7 +319,7 @@ libmatroska
 libmpg123
 #me-tv (this pulls in xine-ui)
 #mencoder
-#Miro
+Miro
 #mozilla-vlc
 mpg321
 nautilus-sound-converter
@@ -372,27 +362,11 @@ kernel-devel
 dkms
 time
 
-#Out of kernel GPL drivers
-#akmod-rt2860
-#akmod-rt2870
-#akmod-rt3070
-#akmod-VirtualBox-OSE
-#akmod-wl (I don't think this is GPLv2!)
-#kmod-staging
-#mesa-dri-drivers-experimental
-
 %end
-
-#%post --nochroot
-#umount $INSTALL_ROOT/var/cache/yum
-#%end
 
 %post
 
 echo -e "\n*****\nPOST SECTION\n*****\n"
-
-#Set resolv.conf
-echo "nameserver 192.168.28.1" >> /etc/resolv.conf
 
 #Build out of kernel modules (so it's not done on first boot)
 echo "****BUILDING AKMODS****"
@@ -416,29 +390,6 @@ systemctl enable yum-updatesd.service
 #LiveCD stuff (like creating user) is done by fedora-live-base.ks
 #Modify LiveCD stuff, i.e. set autologin, enable installer (this is done in /etc/rc.d/init.d/livesys)
 cat >> /etc/rc.d/init.d/livesys << EOF
-
-#Set up autologin
-sed -i '/^\[daemon\]/a AutomaticLoginEnable=true\nAutomaticLogin=liveuser' /etc/gdm/custom.conf
-
-# don't use prelink on a running KDE live image
-#sed -i 's/PRELINKING=yes/PRELINKING=no/' /etc/sysconfig/prelink # actually this forces prelink to run to undo prelinking (see /etc/sysconfig/prelink)
-mv /usr/sbin/prelink /usr/sbin/prelink-disabled
-rm /etc/cron.daily/prelink
-
-#un-mute sound card (fixes some issues reported)
-amixer set Master 85% unmute 2>/dev/null
-amixer set PCM 85% unmute 2>/dev/null
-pactl set-sink-mute 0 0
-pactl set-sink-volume 0 50000
-
-#chmod a+x /home/liveuser/Desktop/liveinst.desktop
-chmod +x /usr/share/applications/liveinst.desktop
-chown -Rf liveuser:liveuser /home/liveuser/Desktop
-restorecon -R /home/liveuser/
-
-#Turn off screensaver in live mode
-gconftool-2 --direct --config-source xml:readwrite:/etc/gconf/gconf.xml.mandatory --type bool --set /apps/gnome-screensaver/idle_activation_enabled false
-
 # disable screensaver locking
 cat >> /usr/share/glib-2.0/schemas/org.gnome.desktop.screensaver.gschema.override << FOE
 [org.gnome.desktop.screensaver]
@@ -481,48 +432,45 @@ FOE
   fi
 fi
 
+# rebuild schema cache with any overrides we installed
 glib-compile-schemas /usr/share/glib-2.0/schemas
 
-#disable yumupdatesd on live CD
-#service yum-updatesd stop
-systemctl stop yum-updatesd.service
-
-#disable jockey from autostarting in live CD
-rm /etc/xdg/autostart/jockey*
+#Set up autologin
+sed -i '/^\[daemon\]/a AutomaticLoginEnable=true\nAutomaticLogin=liveuser' /etc/gdm/custom.conf
 
 # Turn off PackageKit-command-not-found in live CD
 if [ -f /etc/PackageKit/CommandNotFound.conf ]; then
   sed -i -e 's/^SoftwareSourceSearch=true/SoftwareSourceSearch=false/' /etc/PackageKit/CommandNotFound.conf
 fi
 
+# don't use prelink on a running live image
+#sed -i 's/PRELINKING=yes/PRELINKING=no/' /etc/sysconfig/prelink # actually this forces prelink to run to undo prelinking (see /etc/sysconfig/prelink)
+mv /usr/sbin/prelink /usr/sbin/prelink-disabled
+rm /etc/cron.daily/prelink
+
+#un-mute sound card (fixes some issues reported)
+amixer set Master 85% unmute 2>/dev/null
+amixer set PCM 85% unmute 2>/dev/null
+pactl set-sink-mute 0 0
+pactl set-sink-volume 0 50000
+
+#chmod a+x /home/liveuser/Desktop/liveinst.desktop
+chmod +x /usr/share/applications/liveinst.desktop
+chown -Rf liveuser:liveuser /home/liveuser/Desktop
+restorecon -R /home/liveuser/
+
+#Turn off screensaver in live mode
+gconftool-2 --direct --config-source xml:readwrite:/etc/gconf/gconf.xml.mandatory --type bool --set /apps/gnome-screensaver/idle_activation_enabled false
+
+#disable yumupdatesd on live CD
+systemctl stop yum-updatesd.service
+
+#disable jockey from autostarting in live CD
+rm /etc/xdg/autostart/jockey*
+
+glib-compile-schemas /usr/share/glib-2.0/schemas
+
 EOF
-
-#Clean up yum (shouldn't be neccessary)
-#yum check-update
-#yum -y update
-#yum -y reinstall kororaa-extras kororaa-settings-gnome
-#yum -y reinstall jockey jockey-gtk jockey-selinux
-#rm -f /var/log/yum.log
-#
-##build yum db
-#yum clean all
-#yum check-update
-#yum -y update
-#yum provides */fake123
-#rm -f /var/log/yum.log
-
-pkcon get-packages
-pkcon get-categories
-
-echo waiting...
-sleep 30
-
-#Finally, clean up resolv.conf hack
-echo "" > /etc/resolv.conf
 
 %end
 
-#%post --nochroot
-#mount --bind /var/cache/yum $INSTALL_ROOT/var/cache/yum
-#
-#%end
