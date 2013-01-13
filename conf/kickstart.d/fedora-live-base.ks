@@ -15,11 +15,14 @@ selinux --enforcing
 authconfig --enableshadow --passalgo=sha512 --enablefingerprint
 firewall --enabled --service=ssh,mdns,ipp-client,samba-client
 xconfig --startxonboot
-part / --size 3072 --fstype ext4
+#part / --size 3072 --fstype ext4
 services --enabled=NetworkManager,lirc --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmcore,capi,iscsi,iscsid,isdn,netfs,network,nfs,nfslock,pcscd,rpcbind,rpcgssd,rpcidmapd,rpcsvcgssd,sendmail,sshd
 
 #Partitioning, for Live CD
 part / --size 7188 --fstype ext4
+
+#
+# REPOS
 
 repo --name="Adobe Systems Incorporated" --baseurl=http://linuxdownload.adobe.com/linux/%%KP_BASEARCH%%/ --cost=1000
 repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%%" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
@@ -39,6 +42,9 @@ repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfre
 #repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
 #repo --name="RPMFusion Non-Free - Updates" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
 repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+
+#
+# PACKAGES
 
 %packages
 @admin-tools
