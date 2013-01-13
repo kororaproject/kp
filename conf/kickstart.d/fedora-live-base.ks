@@ -7,35 +7,56 @@
 # Does includes "default" language configuration (kickstarts including
 # this template can override these settings)
 
-lang en_US.UTF-8
+lang en_AU.UTF-8
 keyboard us
-timezone US/Eastern
+timezone --utc Australia/Sydney
 auth --useshadow --enablemd5
 selinux --enforcing
-firewall --enabled --service=mdns
+authconfig --enableshadow --passalgo=sha512 --enablefingerprint
+firewall --enabled --service=ssh,mdns,ipp-client,samba-client
 xconfig --startxonboot
 part / --size 3072 --fstype ext4
-services --enabled=NetworkManager --disabled=network,sshd
+services --enabled=NetworkManager,lirc --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmcore,capi,iscsi,iscsid,isdn,netfs,network,nfs,nfslock,pcscd,rpcbind,rpcgssd,rpcidmapd,rpcsvcgssd,sendmail,sshd
 
-#repo --name=rawhide --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=rawhide&arch=$basearch
-repo --name=fedora --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
-repo --name=updates --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
-#repo --name=updates-testing --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-testing-f$releasever&arch=$basearch
+#Partitioning, for Live CD
+part / --size 7188 --fstype ext4
+
+repo --name="Adobe Systems Incorporated" --baseurl=http://linuxdownload.adobe.com/linux/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%%" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Google Chrome" --baseurl=http://dl.google.com/linux/chrome/rpm/stable/%%KP_BASEARCH%%/ --cost=1000
+repo --name="Korora %%KP_VERSION%%" --baseurl=file://%%KP_REPOSITORY_DIR%%/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=10
+
+#repo --name="Kororaa Testing" --baseurl=file:///home/chris/repos/kororaa/testing/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=5
+#repo --name="Ksplice Uptrack for Fedora" --baseurl=http://www.ksplice.com/yum/uptrack/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+
+repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Free - Updates" --baseurl=http://download1.rpmfusion.org/free/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+
+repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
+#repo --name="RPMFusion Non-Free - Updates" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
+repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
 
 %packages
+@admin-tools
 @base-x
-@standard
 @core
+@critical-path-base
+@dial-up
 @fonts
 @input-methods
-@dial-up
--@multimedia
 @hardware-support
+-@multimedia
 @printing
+@standard
 
 # Explicitly specified here:
 # <notting> walters: because otherwise dependency loops cause yum issues.
 kernel
+kernel-modules-extra
 
 # This was added a while ago, I think it falls into the category of
 # "Diagnosis/recovery tool useful from a Live OS image".  Leaving this untouched
@@ -45,6 +66,24 @@ memtest86+
 # The point of a live image is to install
 anaconda
 @anaconda-tools
+
+#Install 3rd party repo releases
+adobe-release
+google-chrome-release
+google-earth-release
+google-talkplugin-release
+#ksplice-uptrack
+rpmfusion-free-release
+rpmfusion-nonfree-release
+virtualbox-release
+
+# (RE)BRANDING
+korora-backgrounds
+korora-extras
+korora-release
+korora-logos
+korora-release-notes
+
 
 # fpaste is very useful for debugging and very small
 fpaste

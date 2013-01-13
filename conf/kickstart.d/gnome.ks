@@ -13,112 +13,28 @@
 
 %include %%KP_KICKSTART_DIR%%/fedora-live-base.ks
 
-#version=DEVEL
-install
-
-#install system from the net, to get latest updates
-#url --url=ftp://mirror.internode.on.net/pub/fedora/linux/releases/%%KP_VERSION%%/Fedora/x86_64/os/
-url --url=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/
-
-lang en_AU.UTF-8
-keyboard us
-timezone --utc Australia/Sydney
-selinux --enforcing
-authconfig --enableshadow --passalgo=sha512 --enablefingerprint
-firewall --enabled --service=ssh,mdns,ipp-client,samba-client
-xconfig --startxonboot
-services --enabled=NetworkManager,lirc --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmcore,capi,iscsi,iscsid,isdn,netfs,network,nfs,nfslock,pcscd,rpcbind,rpcgssd,rpcidmapd,rpcsvcgssd,sendmail,sshd
-
-#Partitioning, for Live CD
-part / --size 7188 --fstype ext4
-
-#
-# REPOS
-#
-
-repo --name="Adobe Systems Incorporated" --baseurl=http://linuxdownload.adobe.com/linux/%%KP_BASEARCH%%/ --cost=1000
-repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%%" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
-#repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=ftp://mirror.internode.on.net/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
-repo --name="Fedora %%KP_VERSION%% - %%KP_BASEARCH%% - Updates" --baseurl=http://download.fedoraproject.org/pub/fedora/linux/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
-repo --name="Google Chrome" --baseurl=http://dl.google.com/linux/chrome/rpm/stable/%%KP_BASEARCH%%/ --cost=1000
-repo --name="Korora %%KP_VERSION%%" --baseurl=file://%%KP_REPOSITORY_DIR%%/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=10
-
-#repo --name="Kororaa Testing" --baseurl=file:///home/chris/repos/kororaa/testing/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=5
-#repo --name="Ksplice Uptrack for Fedora" --baseurl=http://www.ksplice.com/yum/uptrack/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
-
-repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
-#repo --name="RPMFusion Free" --baseurl=http://download1.rpmfusion.org/free/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
-#repo --name="RPMFusion Free - Updates" --baseurl=http://download1.rpmfusion.org/free/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
-
-repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/development/%%KP_VERSION%%/%%KP_BASEARCH%%/os/ --cost=1000
-#repo --name="RPMFusion Non-Free" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/releases/%%KP_VERSION%%/Everything/%%KP_BASEARCH%%/os/ --cost=1000
-#repo --name="RPMFusion Non-Free - Updates" --baseurl=http://download1.rpmfusion.org/nonfree/fedora/updates/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
-repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/%%KP_VERSION%%/%%KP_BASEARCH%%/ --cost=1000
-
 #
 # PACKAGES
 #
 
 %packages
-@admin-tools
-@cinnamon-desktop-environment
-@critical-path-base
-@base-x
-@core
-@dial-up
+@cinnamon-desktop
 @firefox
-@fonts
-@hardware-support
 @gnome-desktop
 @gnome-games
-@input-methods
 #@mate-desktop-environment
--@multimedia
 @libreoffice
-@online-docs
-@printing
-@standard
-
-#Needed apparently
-kernel
-kernel-modules-extra
-memtest86+
-
-# grub-efi and grub2 and efibootmgr so anaconda can use the right one on install.
-grub-efi
-grub2
-efibootmgr
 
 # FIXME; apparently the glibc maintainers dislike this, but it got put into the
 # desktop image at some point.  We won't touch this one for now.
 nss-mdns
 
-#Install 3rd party repo releases
-adobe-release
-google-chrome-release
-google-earth-release
-google-talkplugin-release
-#ksplice-uptrack
-rpmfusion-free-release
-rpmfusion-nonfree-release
-virtualbox-release
-
 # (RE)BRANDING
-korora-backgrounds
 korora-backgrounds-gnome
 korora-backgrounds-extras-gnome
-korora-extras
-korora-release
-korora-logos
-korora-release-notes
 
 elementary-gtk
 elementary-icon-theme
-
-#Package for checksumming livecd on boot, installer, memtest
-anaconda
-anaconda-widgets
-isomd5sum
 
 #
 # EXTRA PACKAGES
@@ -144,7 +60,6 @@ expect
 firefox
 *firmware*
 font-manager
-fpaste
 fprintd-pam
 fuse
 libXft-infinality
