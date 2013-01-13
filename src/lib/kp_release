@@ -33,19 +33,32 @@ OPT_RELEASE_BASEARCH="x86_64"
 #
 
 function _template_inflate {
-  _IN_FILE=${1}
-  _OUT_FILE=${2}
+  _DST_FILE=${1}
+  _SRC_FILE=${2}
 
-  if [ -r ${_OUT_FILE} ]
+  if [ -r ${_SRC_FILE} ]
   then
-    cp "${_OUT_FILE}" "${_IN_FILE}"
+    cp "${_SRC_FILE}" "${_DST_FILE}"
   fi
 
   # substitute variables
-  sed -i "s@%%KP_KICKSTART_DIR%%@${CONFIG_DIR}/kickstart.d@g" ${_IN_FILE}
-  sed -i "s@%%KP_REPOSITORY_DIR%%@${WORKING_DIR}/repository@g" ${_IN_FILE}
-  sed -i "s@%%KP_BASEARCH%%@${OPT_RELEASE_BASEARCH}@g" ${_IN_FILE}
-  sed -i "s@%%KP_VERSION%%@${OPT_RELEASE_VERSION}@g" ${_IN_FILE}
+  sed -i "s@%%KP_KICKSTART_DIR%%@${CONFIG_DIR}/kickstart.d@g" ${_DST_FILE}
+  sed -i "s@%%KP_REPOSITORY_DIR%%@${WORKING_DIR}/repository@g" ${_DST_FILE}
+  sed -i "s@%%KP_BASEARCH%%@${OPT_RELEASE_BASEARCH}@g" ${_DST_FILE}
+  sed -i "s@%%KP_VERSION%%@${OPT_RELEASE_VERSION}@g" ${_DST_FILE}
+
+
+  # check for includes in our template
+  grep "%include" ${_DST_FILE} | while read I F
+  do
+    _FI="/tmp/$(basename ${F}).${RANDOM}"
+
+    # replace include with our inflated version
+    sed -i "s@$F@${_FI}@" ${_DST_FILE}
+
+    # ensure includes are inflated
+    _template_inflate "${_FI}" "${F}"
+  done
 }
 
 #
@@ -161,7 +174,7 @@ function main {
     _FILE="korora-${OPT_RELEASE_VERSION}-${R}-live"
 
     # create working directory
-    _TEMPLATE="/tmp/${_FILE}.${RANDOM}"
+    _TEMPLATE="/tmp/${R}.ks.${RANDOM}"
 
     _info "Preparing release template: ${_TEMPLATE}"
 
