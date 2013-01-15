@@ -1,0 +1,10 @@
+* option for build "--bump" which bumps the minor release, i.e. 1%{?dist} becomes 1%{?dist}.1, or 1%{?dist}.1 becomes 1%{?dist}.2
+
+* option for build "--version" to specify the version to build, e.g.  ./src/kp --config conf/kp-csmart.conf build --version=2.1.2 mozilla-adblock-plus
+this would update the kp config and also the spec file (and reset any minor version), adding appropriate %changelog entry, e.g. "Update to version 2.1.2"
+
+* option for build "--commit" to automatically commit changes in kp and package git repos on successful build
+
+* check that version in kp config matches the version in spec files
+
+* if version you're building already exists in repo, warn
