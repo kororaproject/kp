@@ -11,7 +11,7 @@
 # KP:DESCRIPTION:END
 #
 
-%include %%KP_KICKSTART_DIR%%/fedora-live-base.ks
+%include %%KP_KICKSTART_DIR%%/base.ks
 
 #
 # PACKAGES
