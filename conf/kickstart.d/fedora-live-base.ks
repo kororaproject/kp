@@ -16,7 +16,7 @@ authconfig --enableshadow --passalgo=sha512 --enablefingerprint
 firewall --enabled --service=ssh,mdns,ipp-client,samba-client
 xconfig --startxonboot
 #part / --size 3072 --fstype ext4
-services --enabled=NetworkManager,lirc --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmcore,capi,iscsi,iscsid,isdn,netfs,network,nfs,nfslock,pcscd,rpcbind,rpcgssd,rpcidmapd,rpcsvcgssd,sendmail,sshd
+services --enabled=NetworkManager,lirc --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmcore,abrt-xorg,capi,iscsi,iscsid,isdn,netfs,network,nfs,nfslock,pcscd,rpcbind,rpcgssd,rpcidmapd,rpcsvcgssd,sendmail,sshd
 
 #Partitioning, for Live CD
 part / --size 7188 --fstype ext4
