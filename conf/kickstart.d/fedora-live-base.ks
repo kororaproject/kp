@@ -83,6 +83,7 @@ rpmfusion-free-release
 rpmfusion-nonfree-release
 virtualbox-release
 
+#
 # (RE)BRANDING
 korora-backgrounds
 korora-extras
@@ -90,6 +91,11 @@ korora-release
 korora-logos
 korora-release-notes
 
+#
+# TERMINAL ENHANCEMENTS
+
+# undistract-me is great for notification on completion of long running terminal commands
+undistract-me
 
 # fpaste is very useful for debugging and very small
 fpaste
