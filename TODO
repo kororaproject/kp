@@ -8,3 +8,5 @@ this would update the kp config and also the spec file (and reset any minor vers
 * check that version in kp config matches the version in spec files
 
 * if version you're building already exists in repo, warn
+
+* add a checksum for downloads and check this against existing tarballs, and post download

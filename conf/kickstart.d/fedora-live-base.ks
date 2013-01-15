@@ -16,7 +16,7 @@ authconfig --enableshadow --passalgo=sha512 --enablefingerprint
 firewall --enabled --service=ssh,mdns,ipp-client,samba-client
 xconfig --startxonboot
 #part / --size 3072 --fstype ext4
-services --enabled=NetworkManager,lirc --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmcore,abrt-xorg,capi,iscsi,iscsid,isdn,netfs,network,nfs,nfslock,pcscd,rpcbind,rpcgssd,rpcidmapd,rpcsvcgssd,sendmail,sshd
+services --enabled=NetworkManager,lirc --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmcore,abrt-xorg,capi,iscsi,iscsid,isdn,libvirtd,multipathd,netfs,network,nfs,nfslock,pcscd,rpcbind,rpcgssd,rpcidmapd,rpcsvcgssd,sendmail,sshd
 
 #Partitioning, for Live CD
 part / --size 7188 --fstype ext4
@@ -224,8 +224,8 @@ fi
 
 # add fedora user with no passwd
 action "Adding live user" useradd \$USERADDARGS -c "Live User (password is liveuser)" liveuser
-#passwd -d liveuser > /dev/null
-echo "liveuser" | passwd --stdin liveuser
+passwd -d liveuser > /dev/null
+#echo "liveuser" | passwd --stdin liveuser
 gpasswd -a liveuser wheel
 
 # turn off firstboot for livecd boots
