@@ -1,0 +1,168 @@
+#!/bin/bash
+#
+# Copyright 2012 "Korora Project" <dev@kororaproject.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the temms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+#
+# INTIALISE
+#
+OPT_VERBOSE=
+OPT_CHECKOUT_ONLY=
+OPT_INTERACTIVE=
+OPT_PUSH_AFTER_UPDATE=
+
+
+#
+# FUNCTIONS
+#
+function usage {
+  _EXIT_VAL=${1:-0}
+
+  cat << EOF
+Usage: $0 sync [-v]
+
+Options:
+  -v   Show verbose output
+  -?   Show this usage
+  -V   Show version
+  -i   Interactive
+  -p   Push updates
+
+Long Options:
+  --interactive   Same as -i
+  --push-updates  Same as -p
+  --verbose       Same as -v
+  --help          Same as -?
+  --version       Same as -V
+
+EOF
+
+  exit ${_EXIT_VAL};
+}
+
+#
+# PARSE COMMAND LINE
+#
+
+function parse_args {
+  CMD_LINE=$(getopt -n$0 -u --longoptions="verbose version help interactive push-updates" "v V ? i p" $@)
+  [ ${?} -ne 0 ] && usage 1
+
+  set -- ${CMD_LINE}
+
+  while [ $# -gt 0 ]
+  do
+    case "$1" in
+      -i|--interactive)
+        OPT_INTERACTIVE=1
+        ;;
+      -p|--push-updates)
+        OPT_PUSH_UPDATES=1
+        ;;
+      -v|--verbose)
+        OPT_VERBOSE=1
+        ;;
+      -V|--version)
+        version 0
+        ;;
+      --help)
+        usage 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        usage 1
+        ;;
+      *)
+        break
+    esac
+    shift
+  done
+
+  # remaining arguments are packages
+  PACKAGES=""
+  if [ $# -eq 0 ]
+  then
+    echo "Syncing all packages ..."
+  else
+    while [ $# -gt 0 ]
+    do
+      PACKAGES="${PACKAGES} $1"
+      shift
+    done
+  fi
+}
+
+
+#
+# MAIN
+#
+
+function main {
+  # load the configuration
+  for F in $(list_config_available "${PACKAGES}")
+  do
+    load_config ${F} || continue
+
+    get_sync_status || continue
+
+    # ignore non-checked out sources
+    [ "${KP_PACKAGE_SYNC_STATE}" == "-" ] && continue
+
+    _info "Syncing: ${KP_NAME}"
+
+    _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}"
+
+    git remote update >/dev/null 2>&1
+
+    _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1 master)
+    _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/master)
+
+    _RL_COMMIT_LOC=$(($(git log --pretty=format:'%H' origin/master | grep -n ${_LOCAL_HEAD} | cut -d: -f1)-1))
+    _LR_COMMIT_LOC=$(($(git log --pretty=format:'%H' master | grep -n ${_REMOTE_HEAD} | cut -d: -f1)-1))
+
+    if [ ${_LR_COMMIT_LOC} -le 0 -a ${_RL_COMMIT_LOC} -le 0 ]
+    then
+      _LR_DELTA="-"
+    elif [ ${_LR_COMMIT_LOC} -gt 0 ]
+    then
+      _LR_DELTA="+${_LR_COMMIT_LOC}"
+    elif [ ${_RL_COMMIT_LOC} -gt 0 ]
+    then
+      _LR_DELTA="-${_RL_COMMIT_LOC}"
+    else
+      _LR_DELTA="?"
+    fi
+
+    _info " - L:${_LOCAL_HEAD} (${_LR_DELTA}) R:${_REMOTE_HEAD}"
+
+    if [ ${_LR_COMMIT_LOC} -gt 0 ]
+    then
+      _info "Pushing changes upstream ..."
+      git push origin master
+    elif [ ${_RL_COMMIT_LOC} -gt 0 ]
+    then
+      _info "Pulling upstream changes ..."
+      git pull --rebase
+    else
+      _info "Up to date."
+    fi
+
+    _popd
+  done
+}
