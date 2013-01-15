@@ -226,7 +226,7 @@ echo "****BUILDING AKMODS****"
 /usr/sbin/akmods --force
 
 #Import keys
-for x in fedora google-chrome virtualbox korora livna adobe rpmfusion-free-fedora-17-primary rpmfusion-nonfree-fedora-17-primary rpmfusion-free-fedora-18-primary rpmfusion-nonfree-fedora-18-primary ; do rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-$x ; done
+for x in fedora google-chrome virtualbox korora livna adobe rpmfusion-free-fedora-18-primary rpmfusion-nonfree-fedora-18-primary ; do rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-$x ; done
 
 #KDE - stop Klipper from starting
 sed -i 's/AutoStart:true/AutoStart:false/g' /usr/share/autostart/klipper.desktop
