@@ -84,7 +84,6 @@ kde-l10n-*
 kdeartwork
 kdeartwork-wallpapers
 kdebase-workspace-ksplash-themes
--kdeedu-marble
 -kdegames
 kdegames-minimal
 kdenlive
@@ -99,7 +98,6 @@ kipi-plugins
 kde-plasma-networkmanagement-openvpn
 kde-plasma-networkmanagement-pptp
 kdiff3
--kdemultimedia-dragonplayer
 konversation
 korora-settings-kde
 krename
@@ -155,7 +153,6 @@ skanlite
 -synaptic
 system-config-lvm
 -system-config-printer
--system-config-printer-kde
 kde-print-manager
 vim
 xorg-x11-apps
