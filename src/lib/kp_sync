@@ -136,32 +136,25 @@ function main {
     _RL_COMMIT_LOC=$(($(git log --pretty=format:'%H' origin/master | grep -n ${_LOCAL_HEAD} | cut -d: -f1)-1))
     _LR_COMMIT_LOC=$(($(git log --pretty=format:'%H' master | grep -n ${_REMOTE_HEAD} | cut -d: -f1)-1))
 
-    if [ ${_LR_COMMIT_LOC} -le 0 -a ${_RL_COMMIT_LOC} -le 0 ]
-    then
-      _LR_DELTA="-"
-    elif [ ${_LR_COMMIT_LOC} -gt 0 ]
-    then
-      _LR_DELTA="+${_LR_COMMIT_LOC}"
-    elif [ ${_RL_COMMIT_LOC} -gt 0 ]
-    then
-      _LR_DELTA="-${_RL_COMMIT_LOC}"
-    else
-      _LR_DELTA="?"
-    fi
+    [ ${_LR_COMMIT_LOC} -le 0 ] && _LR_DELTA=0 || _LR_DELTA="+${_LR_COMMIT_LOC}"
+    [ ${_RL_COMMIT_LOC} -le 0 ] && _RL_DELTA=0 || _RL_DELTA="+${_RL_COMMIT_LOC}"
 
-    _info " - L:${_LOCAL_HEAD} (${_LR_DELTA}) R:${_REMOTE_HEAD}"
 
-    if [ ${_LR_COMMIT_LOC} -gt 0 ]
-    then
-      _info "Pushing changes upstream ..."
-      git push origin master
-    elif [ ${_RL_COMMIT_LOC} -gt 0 ]
+    _info " - L:${_LOCAL_HEAD} (${_LR_DELTA}-${_RL_DELTA}) R:${_REMOTE_HEAD}"
+
+    if [ ${_RL_DELTA} -gt 0 ]
     then
       _info "Pulling upstream changes ..."
-      git pull --rebase
-    else
-      _info "Up to date."
+      git pull --rebase || exit 1
     fi
+
+    if [ ${_LR_DELTA} -gt 0 ]
+    then
+      _info "Pushing local changes upstream ..."
+      git push origin master || exit 1
+    fi
+
+    _info "Up to date."
 
     _popd
   done
