@@ -96,6 +96,7 @@ korora-release-notes
 
 # undistract-me is great for notification on completion of long running terminal commands
 undistract-me
+unburden-home-dir
 
 # fpaste is very useful for debugging and very small
 fpaste
