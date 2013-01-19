@@ -91,6 +91,7 @@ kdenlive
 kde-settings
 kde-settings-pulseaudio
 kde-settings-ksplash
+kde-workspace-ksplash-themes
 kde-settings-plasma
 kdemultimedia-extras-freeworld
 kdeplasma-addons

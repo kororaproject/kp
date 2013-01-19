@@ -10,3 +10,9 @@ this would update the kp config and also the spec file (and reset any minor vers
 * if version you're building already exists in repo, warn
 
 * add a checksum for downloads and check this against existing tarballs, and post download
+
+* add a --clean or --force option to sync which does a git --reset hard and git clean -df so that one can revert any local changes
+
+* add a git version to the package name for packages that are built from a git tree, like handbrake (see handbrake's build.helper)
+
+* create source tarball based on the compression type in spec file, i.e. gz, bz2, xz
