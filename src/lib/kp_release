@@ -75,6 +75,7 @@ Options:
   -t   Set the release title
   -r   Set the release version
   -n   Set the release codename
+  -a   Set the release architecture
   -v   Show verbose output
   -?   Show this usage
   -V   Show version
@@ -83,6 +84,7 @@ Long Options:
   --release-title     Same as -t
   --release-version   Same as -r
   --release-codename  Same as -n
+  --release-arch      Same as -a
   --verbose           Same as -v
   --help              Same as -?
   --version           Same as -V
@@ -97,7 +99,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="list iso usb verbose version help" "l v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="title release-version release-codename release-arch verbose version help" "t r n a l v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -105,6 +107,18 @@ function parse_args {
   while [ $# -gt 0 ]
   do
     case "$1" in
+      -t|--title)
+        OPT_RELEASE_TITLE="$3"
+        ;;
+      -r|--release-version)
+        OPT_RELEASE_VERSION="$3"
+        ;;
+      -n|--release-codename)
+        OPT_RELEASE_CODENAME="$3"
+        ;;
+      -a|--release-arch)
+        OPT_RELEASE_BASEARCH="$3"
+        ;;
       -v|--verbose)
         OPT_VERBOSE=1
         ;;
@@ -182,7 +196,7 @@ function main {
     _template_inflate "${_TEMPLATE}" "${CONFIG_DIR}/kickstart.d/${R}.ks"
 
     # create the CD
-    livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
+    setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
 
     # clean up our inflated template file
     #rm -f "${_TEMPLATE}"
