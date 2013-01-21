@@ -185,7 +185,7 @@ function main {
     _info "  - Version:      ${OPT_RELEASE_VERSION}"
     _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
 
-    _FILE="korora-${OPT_RELEASE_VERSION}-${R}-live"
+    _FILE="korora-${OPT_RELEASE_VERSION}-${OPT_RELEASE_BASEARCH}-${R}-live"
 
     # create working directory
     _TEMPLATE="/tmp/${R}.ks.${RANDOM}"
