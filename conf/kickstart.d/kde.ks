@@ -88,6 +88,8 @@ kdebase-workspace-ksplash-themes
 kdegames-minimal
 kdenlive
 #kde-partitionmanager #broken deps atm
+kde-plasma-daisy
+kde-plasma-yawp
 kde-settings
 kde-settings-pulseaudio
 kde-settings-ksplash

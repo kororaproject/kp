@@ -90,6 +90,7 @@ korora-extras
 korora-release
 korora-logos
 korora-release-notes
+-plymouth-theme-korora
 
 #
 # TERMINAL ENHANCEMENTS
