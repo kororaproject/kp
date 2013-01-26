@@ -285,6 +285,7 @@ sed -i 's/#DefaultUser=johndoe/DefaultUser=liveuser/' /etc/kde/kdm/kdmrc
 
 # show liveinst.desktop on desktop and in menu
 sed -i 's/NoDisplay=true/NoDisplay=false/g' /usr/share/applications/liveinst.desktop
+sed -i 's/Icon=liveinst/Icon=anaconda/g' /usr/share/applications/liveinst.desktop
 
 # chmod +x ~/Desktop/liveinst.desktop to disable KDE's security warning
 chmod +x /usr/share/applications/liveinst.desktop
