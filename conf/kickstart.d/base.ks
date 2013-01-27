@@ -90,7 +90,7 @@ korora-extras
 korora-release
 korora-logos
 korora-release-notes
--plymouth-theme-korora
+plymouth-theme-korora
 
 #
 # TERMINAL ENHANCEMENTS
@@ -105,6 +105,9 @@ fpaste
 %end
 
 %post
+#Set the korora plymouth theme
+sed -i s/^Theme=.*/Theme=korora/ /etc/plymouth/plymouthd.conf
+
 # FIXME: it'd be better to get this installed from a package
 cat > /etc/rc.d/init.d/livesys << EOF
 #!/bin/bash
