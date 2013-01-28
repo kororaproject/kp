@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2012 "Korora Project" <dev@kororaproject.org>
+# Copyright 2012-2013 "Korora Project" <dev@kororaproject.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the temms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 OPT_VERBOSE=
 OPT_USB=
 OPT_ISO=1
-
+OPT_CACHE_ONLY=
 
 OPT_RELEASE_VERSION=18
 OPT_RELEASE_CODENAME="Flo"
@@ -76,6 +76,7 @@ Options:
   -r   Set the release version
   -n   Set the release codename
   -a   Set the release architecture
+  -C   Use cached packages only
   -v   Show verbose output
   -?   Show this usage
   -V   Show version
@@ -85,6 +86,7 @@ Long Options:
   --release-version   Same as -r
   --release-codename  Same as -n
   --release-arch      Same as -a
+  --cache-only        Same as -C
   --verbose           Same as -v
   --help              Same as -?
   --version           Same as -V
@@ -118,6 +120,9 @@ function parse_args {
         ;;
       -a|--release-arch)
         OPT_RELEASE_BASEARCH="$3"
+        ;;
+      -C|--cache-only)
+        OPT_CACHE_ONLY="$3"
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -168,12 +173,10 @@ function main {
     exit 1
   fi
 
-  _VERBOSE=
+  _OPTS=
 
-  if [ ! -z ${OPT_VERBOSE} ]
-  then
-    _VERBOSE="--version"
-  fi
+  [ ! -z ${OPT_VERBOSE} ] && _OPTS="${_OPTS} --version"
+  [ ! -z ${OPT_CACHE_ONLY} ] && _OPTS="${_OPTS} --cache-only"
 
   # build all requested releases
   for R in $(list_kickstart_available "${RELEASES}")
@@ -196,7 +199,7 @@ function main {
     _template_inflate "${_TEMPLATE}" "${CONFIG_DIR}/kickstart.d/${R}.ks"
 
     # create the CD
-    setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_VEBOSE} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
+    setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
 
     # clean up our inflated template file
     #rm -f "${_TEMPLATE}"
