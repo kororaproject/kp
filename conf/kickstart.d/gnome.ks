@@ -327,7 +327,7 @@ FOE
 if [ -f /usr/share/applications/liveinst.desktop ]; then
   # Show harddisk install in shell dash
   sed -i -e 's/NoDisplay=true/NoDisplay=false/' /usr/share/applications/liveinst.desktop
-  sed -i -e 's/Icon=liveinst/Icon=anaconda/' /usr/share/applications/liveinst.desktop
+  sed -i -e 's/Icon=liveinst/Icon=\/usr\/share\/icons\/Fedora\/scalable\/apps\/anaconda.svg/' /usr/share/applications/liveinst.desktop
   # need to move it to anaconda.desktop to make shell happy
   #cp /usr/share/applications/liveinst.desktop /usr/share/applications/anaconda.desktop
   cat >> /usr/share/glib-2.0/schemas/org.korora.gschema.override << FOE

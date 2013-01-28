@@ -15,7 +15,7 @@ selinux --enforcing
 authconfig --enableshadow --passalgo=sha512 --enablefingerprint
 firewall --enabled --service=ssh,mdns,ipp-client,samba-client
 xconfig --startxonboot
-services --enabled=lirc,NetworkManager,restorecond --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmcore,abrt-xorg,capi,iscsi,iscsid,isdn,libvirtd,multipathd,netfs,network,nfs,nfslock,pcscd,rpcbind,rpcgssd,rpcidmapd,rpcsvcgssd,sendmail,sm-cliet,sshd
+services --enabled=lirc,NetworkManager,restorecond --disabled=abrtd,abrt-ccpp,abrt-oops,abrt-vmcore,abrt-xorg,capi,iscsi,iscsid,isdn,libvirtd,multipathd,netfs,network,nfs,nfslock,pcscd,rpcbind,rpcgssd,rpcidmapd,rpcsvcgssd,sendmail,sm-client,sshd
 
 #Partitioning, for Live CD
 part / --size 7168 --fstype ext4
