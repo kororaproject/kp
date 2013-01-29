@@ -311,6 +311,12 @@ function parse_args {
 #
 
 function main {
+if [ -n "$(grep 1 /sys/fs/selinux/enforce)" ]
+  then
+    _error "To avoid build errors, it is required that selinux be put into permissive mode"
+    exit 1
+  fi
+
   _PACKAGE_BUILT=
 
   _info "Building for ${OPT_DIST} ${OPT_RELEASEVER} (${OPT_BASEARCH})"
