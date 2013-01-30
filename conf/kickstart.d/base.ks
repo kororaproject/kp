@@ -102,6 +102,10 @@ unburden-home-dir
 # fpaste is very useful for debugging and very small
 fpaste
 
+#
+# HARDWARE MONITORING/CONTROLLING
+powertop
+
 %end
 
 %post
