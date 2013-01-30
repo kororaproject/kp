@@ -101,7 +101,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="title release-version release-codename release-arch verbose version help" "t r n a l v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="title release-version release-codename release-arch verbose cache-only version help" "t r n a C l v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -175,7 +175,7 @@ function main {
 
   _OPTS=
 
-  [ ! -z ${OPT_VERBOSE} ] && _OPTS="${_OPTS} --version"
+  [ ! -z ${OPT_VERBOSE} ] && _OPTS="${_OPTS} --verbose"
   [ ! -z ${OPT_CACHE_ONLY} ] && _OPTS="${_OPTS} --cache-only"
 
   # build all requested releases
@@ -199,6 +199,8 @@ function main {
     _template_inflate "${_TEMPLATE}" "${CONFIG_DIR}/kickstart.d/${R}.ks"
 
     # create the CD
+    echo setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
+
     setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
 
     # clean up our inflated template file

@@ -117,7 +117,7 @@ WORKING_RELEASE_DIR="${WORKING_DIR}/release"
 WORKING_RELEASE_CACHE_DIR="${WORKING_DIR}/release/cache"
 WORKING_RELEASE_TMP_DIR="${WORKING_DIR}/release/tmp"
 
-SCRIPT=$(basename $0)
+SCRIPT=${0##*/}
 
 if [ ! -d "${WORKING_DIR}" -a "${SUB_COMMAND}" != "init" ]
 then
