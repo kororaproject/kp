@@ -109,20 +109,35 @@ function gather_source {
       # no source files
       ;;
     binary|spec)
-      # create a temporary download dir so we can atomic copy
-      _TMP=$(mktemp --tmpdir -d "spec-download.XXXXXX")
-      _pushd "${_TMP}"
-      spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "."
-      if [ ${?} -eq 0 ];
-      then
-        mv * "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
-      else
-        _RET=1
-      fi
-      _popd
+      # assume downloading sources is already donw and not required
+      _COMPLETE=1
 
-      # clean up now empty dir
-      rmdir "${_TMP}"
+      spectool -l "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" | awk '{print $2}' | while read F
+      do
+        # mark as incomplete if we can't find a file
+        [ "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/${A##*/}" ] || _COMPLETE=0
+      done
+
+      if [ ${_COMPLETE} -ne 0 ]
+      then
+        # create a temporary download dir so we can atomic copy
+        _TMP=$(mktemp --tmpdir -d "spec-download.XXXXXX")
+        _pushd "${_TMP}"
+
+        spectool -g "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" -C "."
+        if [ ${?} -eq 0 ];
+        then
+          mv * "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/"
+        else
+          _RET=1
+        fi
+        _popd
+
+        # clean up now empty dir
+        rmdir "${_TMP}"
+      else
+        _info "Using cached version(s) of source(s)."
+      fi
       ;;
     git|svn)
       # check upstream exists (required)
