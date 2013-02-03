@@ -11,7 +11,7 @@ lang en_US.UTF-8
 keyboard us
 timezone --utc Australia/Sydney
 authconfig --enableshadow --passalgo=sha512 --enablefingerprint
-selinux --permissive
+selinux --enforcing
 authconfig --enableshadow --passalgo=sha512 --enablefingerprint
 firewall --enabled --service=ipp-client,mdns,samba,samba-client,ssh
 xconfig --startxonboot
