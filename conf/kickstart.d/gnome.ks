@@ -111,6 +111,7 @@ java-1.7.0-openjdk
 jockey
 jockey-gtk
 jockey-selinux
+jockey-akmods
 korora-settings-gnome
 libreoffice-calc
 libreoffice-draw

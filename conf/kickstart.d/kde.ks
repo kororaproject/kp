@@ -77,6 +77,7 @@ java-1.7.0-openjdk
 jockey
 jockey-kde
 jockey-selinux
+jockey-akmods
 k3b-extras-freeworld
 kamoso
 kaudiocreator
