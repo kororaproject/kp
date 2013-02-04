@@ -29,7 +29,7 @@ OPT_FORCE=
 function _create_dirs {
   _pushd "${WORKING_DIR}"
 
-  for D in packages repository kickstart release release/cache release/tmp
+  for D in conf packages repository kickstart release release/cache release/tmp
   do
     if [ ! -d "${D}" ]
     then
@@ -114,6 +114,7 @@ function parse_args {
 function main {
   _info "Initialising Korora Package environment ..."
 
+
   # create log directory
   _info "Preparing: ${LOG_DIR}"
   if [ ! -d "${LOG_DIR}" ]
@@ -156,9 +157,19 @@ function main {
     _DISK_AVAILABLE=$(df -h ${WORKING_DIR} | tail -n 1 | awk '{print $4}')
     _DISK_USAGE=$(du -sh ${WORKING_DIR} | cut -f1)
 
+    # initial sync of configuration management package
+    _info "Synchronising to configuration directory ..."
+    git clone "${GIT_URL}/kp-config" "${WORKING_DIR}/conf"
+    if [ ${?} -ne 0 ]
+    then
+      _error "Unable to sync configuration state."
+      exit 1
+    fi
+
     _info "${_DISK_USAGE}B used - ${_DISK_AVAILABLE}B remaining"
   else
     _error "Directory is not writable."
   fi
+
 }
 

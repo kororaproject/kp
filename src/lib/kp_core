@@ -186,12 +186,12 @@ function load_config {
   then
     _debug "No package specified for loading."
     return 1
-  elif [ -r "${CONFIG_DIR}/packages.d/${_PACKAGE}" ]
+  elif [ -r "${WORKING_DIR}/conf/packages.d/${_PACKAGE}" ]
   then
-    _PACKAGE_CONF="${CONFIG_DIR}/packages.d/${_PACKAGE}"
-  elif [ -r "${CONFIG_DIR}/packages.d/${_PACKAGE}.conf" ]
+    _PACKAGE_CONF="${WORKING_DIR}/conf/packages.d/${_PACKAGE}"
+  elif [ -r "${WORKING_DIR}/conf/packages.d/${_PACKAGE}.conf" ]
   then
-    _PACKAGE_CONF="${CONFIG_DIR}/packages.d/${_PACKAGE}.conf"
+    _PACKAGE_CONF="${WORKING_DIR}/conf/packages.d/${_PACKAGE}.conf"
   else
     _debug "Can't find configuration for ${_PACKAGE}"
     return 1
@@ -235,7 +235,7 @@ function list_config_available {
   _PACKAGES=( ${1:-} )
   _FILES=
 
-  for C in $(ls -1 ${CONFIG_DIR}/packages.d/kp-*.conf)
+  for C in $(ls -1 ${WORKING_DIR}/conf/packages.d/kp-*.conf)
   do
     _FILE=$(basename $C)
 
@@ -267,7 +267,7 @@ function print_config_details {
   fi
 
   #
-  load_package_config_file ${CONFIG_DIR}/$_PACKAGE.conf
+  load_package_config_file ${WORKING_DIR}/conf/$_PACKAGE.conf
   _RET=${?}
 
   if [ ${_RET} -eq 0 ]
@@ -294,7 +294,7 @@ function list_kickstart_available {
   _KICKSTARTS=( ${1:-} )
   _FILES=
 
-  for K in $(ls -1 ${CONFIG_DIR}/kickstart.d/*.ks)
+  for K in $(ls -1 ${WORKING_DIR}/conf/kickstart.d/*.ks)
   do
     _FILE=$(basename $K)
     _FILE=${_FILE%.ks}

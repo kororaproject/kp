@@ -21,67 +21,62 @@ VERSION="0.1.0"
 #
 # PRE-INIT
 #
-SUB_COMMAND=
-CONFIG_FILE=
+SUB_COMMAND=""
+CONFIG_FILE=""
 
+# assume first parameter to be the subcommand
+while [ $# -gt 0 ] && [ -z ${SUB_COMMAND} ]
+do
+  case "$1" in
+    init|--init)
+      SUB_COMMAND=init
+      ;;
+    list|--list)
+      SUB_COMMAND=list
+      ;;
+    help|--help)
+      SUB_COMMAND=help
+      ;;
+    build|--build)
+      SUB_COMMAND=build
+      ;;
+    sync|--sync)
+      SUB_COMMAND=sync
+      ;;
+    checkout|--checkout)
+      SUB_COMMAND=checkout
+      ;;
+    release|--release)
+      SUB_COMMAND=release
+      ;;
+    --config*)
+      if [ ${#1} -eq 8 ]
+      then
+        CONFIG_FILE=$2
+        shift
+      else
+        CONFIG_FILE="${1/--config=/}"
+      fi
+      ;;
+    *)
+      _error "Unknown command specified: $1"
+      exit 1
+      ;;
+  esac
+  shift
+done
 
-if [ $# -eq 0 ]
-then
-  SUB_COMMAND=help
-else
-  # assume first parameter to be the subcommand
-  while [ $# -gt 0 ] && [ -z ${SUB_COMMAND} ]
-  do
-    case "$1" in
-      init|--init)
-        SUB_COMMAND=init
-        ;;
-      list|--list)
-        SUB_COMMAND=list
-        ;;
-      help|--help)
-        SUB_COMMAND=help
-        ;;
-      build|--build)
-        SUB_COMMAND=build
-        ;;
-      sync|--sync)
-        SUB_COMMAND=sync
-        ;;
-      checkout|--checkout)
-        SUB_COMMAND=checkout
-        ;;
-      release|--release)
-        SUB_COMMAND=release
-        ;;
-      --config*)
-        if [ ${#1} -eq 8 ]
-        then
-          CONFIG_FILE=$2
-          shift
-        else
-          CONFIG_FILE="${1/--config=/}"
-        fi
-        ;;
-      *)
-        _error "Uknown command specified: $1"
-        exit 1
-        ;;
-    esac
-    shift
-  done
-fi
+# set to help if no sub command found
+[ -z "${SUB_COMMAND}" ] && SUB_COMMAND=help
 
 #
 # DEFAULTS
 #
 
-[ -z ${CONFIG_DIR} ]  && CONFIG_DIR="/etc/kp"
 [ -z ${LIB_DIR} ]     && LIB_DIR="/usr/share/lib/kp/lib"
 [ -z ${WORKING_DIR} ] && WORKING_DIR="/var/lib/kp"
 [ -z ${RELEASE_DIR} ] && RELEASE_DIR="/tmp"
 [ -z ${LOG_DIR} ]     && LOG_DIR="/usr/share/lib/kp/log"
-[ -z ${CONFIG_FILE} ] && CONFIG_FILE="${CONFIG_DIR}/kp.conf"
 
 #
 # INCLUDES
@@ -100,7 +95,7 @@ then
   echo "FATAL: Invalid LIB_DIR defined."
   exit 1
 else
-  source ${LIB_DIR}/kp_core
+  source "${LIB_DIR}/kp_core"
 fi
 
 if [ ! -d "${LOG_DIR}" -a "${SUB_COMMAND}" != "init" ]
@@ -110,6 +105,7 @@ then
 fi
 
 # build working subdirectories
+WORKING_CONFIG_DIR="${WORKING_DIR}/conf"
 WORKING_PACKAGES_DIR="${WORKING_DIR}/packages"
 WORKING_REPOSITORY_DIR="${WORKING_DIR}/repository"
 WORKING_KICKSTART_DIR="${WORKING_DIR}/kickstart"
