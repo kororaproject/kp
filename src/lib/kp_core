@@ -287,25 +287,28 @@ function list_kickstart_available {
   _KICKSTARTS=( ${1:-} )
   _FILES=
 
-  for K in $(ls -1 "${WORKING_DIR}/conf/kickstart.d/*.ks")
-  do
-    _FILE=$(basename $K)
-    _FILE=${_FILE%.ks}
+  if [ -d "${WORKING_DIR}/conf/kickstart.d/" ]
+  then
+    for K in $(ls -1 ${WORKING_DIR}/conf/kickstart.d/*.ks)
+    do
+      _FILE=$(basename "$K")
+      _FILE=${_FILE%.ks}
 
-    # skip if this is not requested
-    if [ ${#_KICKSTARTS[@]} -eq 0 ]
-    then
-      _FILES="${_FILES} ${_FILE}"
-    else
-      for K in "${_KICKSTARTS[@]}"
-      do
-        if [ "${K}" == "${_FILE}" ]
-        then
-          _FILES="${_FILES} ${_FILE}"
-        fi
-      done
-    fi
-  done
+      # skip if this is not requested
+      if [ ${#_KICKSTARTS[@]} -eq 0 ]
+      then
+        _FILES="${_FILES} ${_FILE}"
+      else
+        for K in "${_KICKSTARTS[@]}"
+        do
+          if [ "${K}" == "${_FILE}" ]
+          then
+            _FILES="${_FILES} ${_FILE}"
+          fi
+        done
+      fi
+    done
+  fi
 
   echo ${_FILES}
 }
