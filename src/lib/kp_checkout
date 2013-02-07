@@ -21,7 +21,7 @@
 #
 OPT_VERBOSE=
 OPT_CHECKOUT_ONLY=
-OPT_UPSTREAM=
+OPT_UPSTREAM=1
 
 
 #
@@ -149,16 +149,16 @@ function usage {
   Usage: $0 [-v] package1 package2 ... packageN
 
   Options:
-    -U   Checkout the upstream source as well
+    -n   Don't checkout the upstream source
     -v   Show verbose output
     -?   Show this usage
     -V   Show version
 
   Long Options:
-    --upstream    Same as -U
-    --verbose     Same as -v
-    --help        Same as -?
-    --version     Same as -V
+    --no-upstream  Same as -n
+    --verbose      Same as -v
+    --help         Same as -?
+    --version      Same as -V
 
 EOF
 
@@ -170,7 +170,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="upstream verbose version help" "U v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="no-upstream verbose version help" "n v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -179,7 +179,7 @@ function parse_args {
   do
     case "$1" in
       -U|--upstream)
-        OPT_UPSTREAM=1
+        OPT_UPSTREAM=
         ;;
       -v|--verbose)
         OPT_VERBOSE=1

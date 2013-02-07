@@ -204,7 +204,7 @@ function load_config {
   source "${_PACKAGE_CONF}"
 
   # TODO: validate the config
-  # we need KP_NAME, KP_VERSION, KP_URL, KP_BUILD_SPEC_TEMPLATE
+  # we need KP_NAME, KP_VERSION, KP_RELEASE, KP_URL, KP_BUILD_SPEC_TEMPLATE
   # KP_BUILD_ARCH as a minimum
   if [ -z "${KP_NAME}" ]
   then
@@ -212,6 +212,9 @@ function load_config {
   elif [ -z "${KP_VERSION}" ]
   then
     _error "KP_VERSION is missing from ${_PACKAGE} config."
+  elif [ -z "${KP_RELEASE}" ]
+  then
+    _error "KP_RELEASE is missing from ${_PACKAGE} config."
   elif [ -z "${KP_BUILD_SPEC}" -a -z "${KP_BUILD_SPEC_TEMPLATE}" ]
   then
     _error "KP_BUILD_SPEC or KP_BUILD_SPEC_TEMPLATE is missing from ${_PACKAGE} config."
@@ -258,25 +261,15 @@ function list_config_available {
   echo ${_FILES}
 }
 
-function print_config_details {
-  _PACKAGE_FILE=${1:-''}
+function check_config_pacakge {
+  _FILE=${1:-}
+  load_config ${_FILE} || return 1
 
-  if [ -z ${_PACKAGE_FILE} ]
-  then
-    return 1
-  fi
+  _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}" || return 1
 
-  #
-  load_package_config_file ${WORKING_DIR}/conf/$_PACKAGE.conf
-  _RET=${?}
 
-  if [ ${_RET} -eq 0 ]
-  then
-    true
-  fi
-
-  return ${_RET}
 }
+
 
 #
 # KICKSTART HANDLING FUNCTIONS
@@ -294,7 +287,7 @@ function list_kickstart_available {
   _KICKSTARTS=( ${1:-} )
   _FILES=
 
-  for K in $(ls -1 ${WORKING_DIR}/conf/kickstart.d/*.ks)
+  for K in $(ls -1 "${WORKING_DIR}/conf/kickstart.d/*.ks")
   do
     _FILE=$(basename $K)
     _FILE=${_FILE%.ks}
@@ -446,6 +439,8 @@ function get_sync_status {
 
   _popd
 }
+
+
 
 
 #

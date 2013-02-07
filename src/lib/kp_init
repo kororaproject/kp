@@ -158,7 +158,7 @@ function main {
     _DISK_USAGE=$(du -sh ${WORKING_DIR} | cut -f1)
 
     # initial sync of configuration management package
-    _info "Synchronising to configuration directory ..."
+    _info "Synchronising upstream configuration information ..."
     git clone "${GIT_URL}/kp-config" "${WORKING_DIR}/conf"
     if [ ${?} -ne 0 ]
     then
