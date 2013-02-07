@@ -231,7 +231,7 @@ function main {
     echo "Checking out: ${KP_NAME}"
 
     # grab the korora package
-    _package_checkout
+    _package_checkout || continue
 
     # grab the relevant upstream source
     if [ -n "${OPT_UPSTREAM}" ]
