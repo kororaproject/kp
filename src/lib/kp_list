@@ -136,7 +136,7 @@ function main {
     then
       _info $(printf " %s%s  %-32s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}")
     else
-      _info $(printf " %s%s  %-32s\t%-8s\t%s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}" "${KP_VERSION}" "${KP_URL}")
+      _info $(printf " %s%s  %-32s\t%-16s\t%s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}" "${KP_VERSION}-${KP_RELEASE}" "${KP_URL}")
     fi
 
     # reset the input field seperator

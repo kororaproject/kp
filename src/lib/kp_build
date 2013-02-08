@@ -397,6 +397,8 @@ if [ -n "$(grep 1 /sys/fs/selinux/enforce)" ]
     build_post_build || continue
 
     _PACKAGE_BUILT=1
+
+    echo
   done
 
   # rebuild the repository directory
@@ -407,5 +409,9 @@ if [ -n "$(grep 1 /sys/fs/selinux/enforce)" ]
     [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
     createrepo ${_VERBOSE} "${_REPO_ARCH_DIR}"
     createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
+
+    echo
   fi
+
+  _info "Completed."
 }
