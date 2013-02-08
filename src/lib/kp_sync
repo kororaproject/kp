@@ -23,7 +23,8 @@ OPT_VERBOSE=
 OPT_CHECKOUT_ONLY=
 OPT_INTERACTIVE=
 OPT_PUSH_AFTER_UPDATE=
-
+OPT_FORCE_LOCAL_VERSION=
+OPT_CACHE=
 
 #
 # FUNCTIONS
@@ -35,6 +36,7 @@ function usage {
 Usage: $0 sync [-v]
 
 Options:
+  -C   Use cached version of upstream configuration information.
   -v   Show verbose output
   -?   Show this usage
   -V   Show version
@@ -42,23 +44,52 @@ Options:
   -p   Push updates
 
 Long Options:
-  --interactive   Same as -i
-  --push-updates  Same as -p
-  --verbose       Same as -v
-  --help          Same as -?
-  --version       Same as -V
+  --cache                Same as -C
+  --force-local-version  Force the configuration to be updated based on local versions.
+  --interactive          Same as -i
+  --push-updates         Same as -p
+  --verbose              Same as -v
+  --help                 Same as -?
+  --version              Same as -V
 
 EOF
 
   exit ${_EXIT_VAL};
 }
 
+function get_spec_version {
+  _FILE=${1:-}
+
+  _SPEC_VERSION=0
+  _SPEC_RELEASE=0
+
+  # ensure the file is readable
+  if [ -r "${_FILE}" ]
+  then
+    # extract all global/define variables and evaluate them to the stack via "name=foo"
+    IFS=$'\n'
+    for V in $(grep -e ^%define -e ^%global ${_FILE} | sed -r -e 's/-([a-zA-Z0-9]+)/_\1/g' -e 's/%(define|global)\s+([a-zA-Z0-9_]+)\s+(.*)/\2="\3"/' )
+    do
+      eval "__$V"
+    done
+    unset IFS
+
+    # perform variable substition by replace spec specific variables (%{var}) with our stack variables ($__var) and evaulate
+    _SPEC_VERSION=$(awk '/^Version:/ { print $2 }' "${_FILE}" | sed -r -e "s/%\{([a-zA-Z0-9_-]+)\}/\$__\\1/g" -e 's/-([a-zA-Z0-9]+)/_\1/g')
+    _SPEC_VERSION=$(eval echo ${_SPEC_VERSION})
+    _SPEC_RELEASE=$(awk '/^Release:/ { print $2 }' ${_FILE} | sed -r -e 's/%\{\?dist\}(.*)/\1/' -e "s/%\{([a-zA-Z0-9_-]+)\}/\$__\\1/g" -e 's/-([a-zA-Z0-9]+)/_\1/g')
+    _SPEC_RELEASE=$(eval echo ${_SPEC_RELEASE})
+  fi
+}
+
+
+
 #
 # PARSE COMMAND LINE
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="verbose version help interactive push-updates" "v V ? i p" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="cache force-local-version verbose version help interactive push-updates" "C v V ? i p" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -66,6 +97,12 @@ function parse_args {
   while [ $# -gt 0 ]
   do
     case "$1" in
+      -C|--cache)
+        OPT_CACHE=1
+        ;;
+      --force-local-version)
+        OPT_FORCE_LOCAL_VERSION=1
+        ;;
       -i|--interactive)
         OPT_INTERACTIVE=1
         ;;
@@ -114,39 +151,50 @@ function parse_args {
 #
 
 function main {
+
+  # check that we have packages to sync
+  if [ -z "$(ls -A ${WORKING_PACKSES_DIR})" ]
+  then
+    _error "There are no packages checked out. Try kp --checkout."
+    return 1
+  fi
+
   # synchronise package cache first
-  _info "Synchronising upstream configuration information ..."
-
-  _pushd "${WORKING_DIR}/conf"
-  git remote update >/dev/null 2>&1
-
-  _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1 master)
-  _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/master)
-
-  _RL_COMMIT_LOC=$(($(git log --pretty=format:'%H' origin/master | grep -n ${_LOCAL_HEAD} | cut -d: -f1)-1))
-  _LR_COMMIT_LOC=$(($(git log --pretty=format:'%H' master | grep -n ${_REMOTE_HEAD} | cut -d: -f1)-1))
-
-  [ ${_LR_COMMIT_LOC} -le 0 ] && _LR_DELTA=0 || _LR_DELTA="+${_LR_COMMIT_LOC}"
-  [ ${_RL_COMMIT_LOC} -le 0 ] && _RL_DELTA=0 || _RL_DELTA="+${_RL_COMMIT_LOC}"
-
-  _info " - L:${_LOCAL_HEAD} (${_LR_DELTA}-${_RL_DELTA}) R:${_REMOTE_HEAD}"
-
-  if [ ${_RL_DELTA} -gt 0 ]
+  if [ "${OPT_CACHE}" != "1" ]
   then
-    _info "Pulling upstream changes ..."
-    git pull --rebase || exit 1
+    _info "Synchronising upstream configuration information ..."
+
+    _pushd "${WORKING_DIR}/conf"
+
+    git remote update >/dev/null 2>&1
+
+    _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1 master)
+    _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/master)
+
+    _RL_COMMIT_LOC=$(($(git log --pretty=format:'%H' origin/master | grep -n ${_LOCAL_HEAD} | cut -d: -f1)-1))
+    _LR_COMMIT_LOC=$(($(git log --pretty=format:'%H' master | grep -n ${_REMOTE_HEAD} | cut -d: -f1)-1))
+
+    [ ${_LR_COMMIT_LOC} -le 0 ] && _LR_DELTA=0 || _LR_DELTA="+${_LR_COMMIT_LOC}"
+    [ ${_RL_COMMIT_LOC} -le 0 ] && _RL_DELTA=0 || _RL_DELTA="+${_RL_COMMIT_LOC}"
+
+    _info " - L:${_LOCAL_HEAD} (${_LR_DELTA}-${_RL_DELTA}) R:${_REMOTE_HEAD}"
+
+    if [ ${_RL_DELTA} -gt 0 ]
+    then
+      _info "Pulling upstream changes ..."
+      git pull --rebase || exit 1
+    fi
+
+    if [ ${_LR_DELTA} -gt 0 ]
+    then
+      _info "Pushing local changes upstream ..."
+      git push origin master || exit 1
+    fi
+
+    _popd
   fi
 
-  if [ ${_LR_DELTA} -gt 0 ]
-  then
-    _info "Pushing local changes upstream ..."
-    git push origin master || exit 1
-  fi
-
-  _popd
-
-
-  # process each package
+  # process each package for sync
   for F in $(list_config_available "${PACKAGES}")
   do
     # load the configuration
@@ -154,48 +202,39 @@ function main {
 
     get_sync_status || continue
 
-    echo $F
+    # ignore non-checked out sources
+    [ "${KP_PACKAGE_SYNC_STATE}" == "-" ] && continue
 
     _info "Syncing: ${KP_NAME}"
-
-    # ignore non-checked out sources
-    if [ "${KP_PACKAGE_SYNC_STATE}" == "-" ]
-    then
-      _debug "Not checked out, ignoring."
-      continue
-    fi
 
     # move to local working dir
     _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}"
 
     # check package version with spec
-    _SPEC_VERSION=$(awk '/^Version:/ { print $2 }' "build/${KP_BUILD_SPEC}")
-    _SPEC_RELEASE=$(awk '/^Release:/ { print $2 }' "build/${KP_BUILD_SPEC}" | sed -r 's/%\{\?dist\}(.*)/\1/')
+    get_spec_version "build/${KP_BUILD_SPEC}"
 
     _R_VER="${KP_VERSION}-${KP_RELEASE}"
     _L_VER="${_SPEC_VERSION}-${_SPEC_RELEASE}"
 
     # calculate the version mismatch
-    if [ "${_R_VER}" \> "${_L_VER}" ]
-    then
-      _MASTER="R"
-    elif [ "${_R_VER}" == "${_L_VER}" ]
-    then
-      _MASTER="-"
-    else
-      _MASTER="L"
-    fi
+    _MASTER="L"
+    [ "${_R_VER}" \> "${_L_VER}" ] && _MASTER="R"
+    [ "${_R_VER}" == "${_L_VER}" ] && _MASTER="-"
 
     _info "M: ${_MASTER} (L:${_L_VER} R:${_R_VER})"
 
+    # calculate the local/heads head
+    _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1 master)
+    _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/master)
+
     # remote and local differ so let's fetch and assess
-    if [ "${_MASTER}" != "-" ]
+    if [ "${_MASTER}" != "-" -o "${_LOCAL_HEAD}" != "${_REMOTE_HEAD}" ]
     then
       _info "Updating ..."
 
       git remote update >/dev/null 2>&1
 
-      _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1 master)
+      # calculate the remote head
       _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/master)
 
       _RL_COMMIT_LOC=$(($(git log --pretty=format:'%H' origin/master | grep -n ${_LOCAL_HEAD} | cut -d: -f1)-1))
@@ -217,28 +256,44 @@ function main {
         _info "Pushing local changes upstream ..."
         git push origin master || exit 1
       fi
+
+      # recalculate local head
+      _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1 master)
+
+      # recalculate version matches
+      _R_VER="${KP_VERSION}-${KP_RELEASE}"
+
+      _MASTER="L"
+      [ "${_R_VER}" \> "${_L_VER}" ] && _MASTER="R"
+      [ "${_R_VER}" == "${_L_VER}" ] && _MASTER="-"
     fi
 
     # local is ahead so update the configuration information
-    if [ "${_MASTER}" == "L" ]
+    if [ "${_MASTER}" == "L" ] || [ "${_MASTER}" != "-" -a "${OPT_FORCE_LOCAL_VERSION}" == "1" ]
     then
-      _info "Updating upstream configuration information ..."
+      _VERBOSE_FORCE=
+      [ "${OPT_FORCE_LOCAL_VERSION}" == "1" ] && _VERBOSE_FORCE=" (forced)"
+      _info "Updating upstream configuration information${_VERBOSE_FORCE} ..."
 
       _pushd "${WORKING_DIR}/conf/"
 
-      sed -e "s/^KP_VERSION=.*/KP_VERSION=${_SPEC_VERSION}/" \
-          -e "s/^KP_RELEASE=.*/KP_RELEASE=${_SPEC_RELEASE}/" \
-          -e "s/^KP_RELEASE_GIT_COMMIT=.*/KP_RELEASE_GIT_COMMIT=TBD" \
-          "packages.d/$F"
+      sed -i -e "s/^KP_VERSION=.*/KP_VERSION=${_SPEC_VERSION}/" \
+             -e "s/^KP_RELEASE=.*/KP_RELEASE=${_SPEC_RELEASE}/" \
+             -e "s/^KP_RELEASE_GIT_COMMIT=.*/KP_RELEASE_GIT_COMMIT=${_LOCAL_HEAD}/" \
+             "packages.d/${F}"
 
-      echo git commit -m "updated: version bumps for ${KP_NAME}"
-      echo git push origin master
+      git add "packages.d/${F}"
+      git commit -m "updated: version bump for ${KP_NAME} ${_VERBOSE_FORCE}"
+      git push origin master
 
       _popd
     fi
 
     _info "Up to date."
+    echo
 
     _popd
   done
+
+  _info "Completed."
 }
