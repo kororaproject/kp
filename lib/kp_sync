@@ -23,6 +23,7 @@ OPT_VERBOSE=
 OPT_CHECKOUT_ONLY=
 OPT_INTERACTIVE=
 OPT_PUSH_AFTER_UPDATE=
+OPT_FORCE_REMOTE_FETCH=
 OPT_FORCE_LOCAL_VERSION=
 OPT_CACHE=
 
@@ -36,7 +37,7 @@ function usage {
 Usage: $0 sync [-v]
 
 Options:
-  -C   Use cached version of upstream configuration information.
+  -C   Use cached version of upstream configuration information
   -v   Show verbose output
   -?   Show this usage
   -V   Show version
@@ -45,7 +46,8 @@ Options:
 
 Long Options:
   --cache                Same as -C
-  --force-local-version  Force the configuration to be updated based on local versions.
+  --force-remote-fetch   Force a sync with remote upsteam
+  --force-local-version  Force the configuration to be updated based on local versions
   --interactive          Same as -i
   --push-updates         Same as -p
   --verbose              Same as -v
@@ -89,7 +91,7 @@ function get_spec_version {
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="cache force-local-version verbose version help interactive push-updates" "C v V ? i p" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="cache force-remote-fetch force-local-version verbose version help interactive push-updates" "C v V ? i p" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -99,6 +101,9 @@ function parse_args {
     case "$1" in
       -C|--cache)
         OPT_CACHE=1
+        ;;
+      --force-remote-fetch)
+        OPT_FORCE_REMOTE_FETCH=1
         ;;
       --force-local-version)
         OPT_FORCE_LOCAL_VERSION=1
@@ -228,7 +233,7 @@ function main {
     _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/master)
 
     # remote and local differ so let's fetch and assess
-    if [ "${_MASTER}" != "-" -o "${_LOCAL_HEAD}" != "${_REMOTE_HEAD}" ]
+    if [ "${_MASTER}" != "-" -o "${_LOCAL_HEAD}" != "${_REMOTE_HEAD}" -o "${OPT_FORCE_REMOTE_FETCH}" == "1" ]
     then
       _info "Updating ..."
 
