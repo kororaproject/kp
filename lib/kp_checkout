@@ -207,7 +207,7 @@ function parse_args {
   PACKAGES=
   if [ $# -eq 0 ]
   then
-    echo "Checking out all package ..."
+    echo "Checking out all packages ..."
   else
     while [ $# -gt 0 ]
     do
@@ -238,6 +238,10 @@ function main {
     then
       _package_upstream_checkout
     fi
+
+    echo
   done
+
+  _info "Completed."
 }
 
