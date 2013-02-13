@@ -39,7 +39,7 @@ function _machine_releasever {
 
 function _machine_dist {
   case $(lsb_release -i | awk '{print $3}') in
-    Fedora|fedora|Korora|korora)
+    Fedora|fedora|Korora|korora|Kororaa|kororaa)
       echo "fedora"
       ;;
     *)
