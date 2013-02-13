@@ -59,7 +59,7 @@ do
       fi
       ;;
     *)
-      _error "Unknown command specified: $1"
+      echo "Unknown command specified: $1"
       exit 1
       ;;
   esac
