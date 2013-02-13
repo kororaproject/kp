@@ -42,11 +42,10 @@ function _template_inflate {
   fi
 
   # substitute variables
-  sed -i "s@%%KP_KICKSTART_DIR%%@${WORKING_DIR}/conf/kickstart.d@g" ${_DST_FILE}
-  sed -i "s@%%KP_REPOSITORY_DIR%%@${WORKING_DIR}/repository@g" ${_DST_FILE}
-  sed -i "s@%%KP_BASEARCH%%@${OPT_RELEASE_BASEARCH}@g" ${_DST_FILE}
-  sed -i "s@%%KP_VERSION%%@${OPT_RELEASE_VERSION}@g" ${_DST_FILE}
-
+  sed -i -e "s@%%KP_KICKSTART_DIR%%@${WORKING_DIR}/conf/kickstart.d@g" \
+         -e "s@%%KP_REPOSITORY%%@file://${WORKING_DIR}/repository@g" \
+         -e "s@%%KP_BASEARCH%%@${OPT_RELEASE_BASEARCH}@g" \
+         -e "s@%%KP_VERSION%%@${OPT_RELEASE_VERSION}@g" ${_DST_FILE}
 
   # check for includes in our template
   grep "%include" ${_DST_FILE} | while read I F
@@ -192,19 +191,25 @@ function main {
 
     # create working directory
     _TEMPLATE="/tmp/${R}.ks.${RANDOM}"
+    _TEMPLATE_FLATTENED="/tmp/${R}-flattened.ks.${RANDOM}"
 
     _info "Preparing release template: ${_TEMPLATE}"
 
     #
     _template_inflate "${_TEMPLATE}" "${WORKING_DIR}/conf/kickstart.d/${R}.ks"
 
-    # create the CD
-    echo setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
+    # flattening template
+    _info "Flattening template into: ${_TEMPLATE_FLATTENED}"
+    ksflatten -c "${_TEMPLATE}" -o "${_TEMPLATE_FLATTENED}"
 
+    # create the CD
+    _info "Creating release ..."
     setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
 
+    # livemedia-creator --make-iso --ks="${_TEMPLATE_FLATTENED}" --image-name="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --project="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --releasever="${OPT_RELEASE_VERSION}" --arch="${OPT_RELEASE_BASEARCH}" --tmp="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}" --no-virt
+
     # clean up our inflated template file
-    #rm -f "${_TEMPLATE}"
+    #rm -f "${_TEMPLATE}" "${_TEMPLATE_FLATTENED}"
   done
 }
 
