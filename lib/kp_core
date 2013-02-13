@@ -47,7 +47,17 @@ function _machine_dist {
   esac
 }
 
+function _is_dir_empty {
+  _DIR=${1:-}
 
+  # check if dir exists
+  [ -d "${_DIR}" ] && return 2
+
+  # check if dir has files
+  [ "$(ls -A ${_DIR})" ] && return 1
+
+  return 0
+}
 #
 # VERSION/USAGE
 #

@@ -16,3 +16,10 @@ this would update the kp config and also the spec file (and reset any minor vers
 * add a git version to the package name for packages that are built from a git tree, like handbrake (see handbrake's build.helper)
 
 * create source tarball based on the compression type in spec file, i.e. gz, bz2, xz
+* related, check SOURCE entries in spec and don't tarball if it's not a tarball (e.g. might be default-bookmarks.html)
+
+* prompt for gpg passphrase and sign keys (needs to check ~/.rpmbuild too)
+
+* needs to build delta rpms
+
+* yum groups
