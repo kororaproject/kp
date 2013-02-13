@@ -118,7 +118,7 @@ function gather_source {
         [ "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/${A##*/}" ] || _COMPLETE=0
       done
 
-      if [ ${_COMPLETE} -ne 0 ]
+      if [ ${_COMPLETE} -eq 0 ]
       then
         # create a temporary download dir so we can atomic copy
         _TMP=$(mktemp --tmpdir -d "spec-download.XXXXXX")
