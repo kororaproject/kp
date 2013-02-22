@@ -108,6 +108,41 @@ function gather_source {
     bare)
       # no source files
       ;;
+    srpm)
+      _SRPM=${KP_UPSTREAM_SRC_URL##*/}
+
+      _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources"
+
+      if [ ! -r "${_SRPM}" ]
+      then
+        _info "Downloading SRPM: ${_SRPM} ..."
+        wget "$KP_UPSTREAM_SRC_URL" -O "${_SRPM}"
+      fi
+
+      # assume downloading sources is already done and not required
+      _COMPLETE=1
+
+      # check if all files to be download already exist first
+      IFS=$'\n'
+      for F in $(rpm2cpio ${_SRPM} | cpio -t --quiet | grep -v "\.spec$")
+      do
+        # mark as incomplete if we can't find a file
+        [ -r "${F}" ] || _COMPLETE=0
+      done
+      unset IFS
+
+      # check if we missed a file
+      if [ ${_COMPLETE} -eq 0 ]
+      then
+        _info "Extracting SRPM source(s) ..."
+
+        rpm2cpio ${_SRPM} | cpio -i --quiet -f "*.spec" || _RET=1
+      else
+        _info "Using cached version(s) of source(s)."
+      fi
+
+      _popd
+      ;;
     binary|spec)
       # assume downloading sources is already donw and not required
       _COMPLETE=1
