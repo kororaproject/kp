@@ -433,10 +433,13 @@ function get_sync_status {
       _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
       _UPSTREAM_LOC=$(git log --pretty=format:'%H' | grep -n ${KP_RELEASE_GIT_COMMIT} | cut -d: -f1)
 
+      # couldn't find the release commit inside upstream
+      [ -z "${_UPSTREAM_LOC}" ] && _UPSTREAM_LOC=-1
+
       if [ ${_UPSTREAM_LOC} -gt 1 ]
       then
         KP_UPSTREAM_SYNC_STATE="+"
-      elif [ ${_UPSTREAM_LOC} -gt 1 ]
+      elif [ ${_UPSTREAM_LOC} -eq 1 ]
       then
         KP_UPSTREAM_SYNC_STATE="S"
       else
