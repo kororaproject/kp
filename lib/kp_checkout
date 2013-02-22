@@ -222,26 +222,31 @@ function parse_args {
 #
 
 function main {
-  # load the configuration
-  for F in $(list_config_available "${PACKAGES}")
-  do
-    load_config ${F}
+  list_config_validate "${PACKAGES}"
+  if [ ${?} -gt 0 ]
+  then
 
-    # start the checkout
-    echo "Checking out: ${KP_NAME}"
+    # load the configuration
+    for F in $(list_config_available "${PACKAGES}")
+    do
+      load_config ${F}
 
-    # grab the korora package
-    _package_checkout || continue
+      # start the checkout
+      echo "Checking out: ${KP_NAME}"
 
-    # grab the relevant upstream source
-    if [ -n "${OPT_UPSTREAM}" ]
-    then
-      _package_upstream_checkout
-    fi
+      # grab the korora package
+      _package_checkout || continue
 
-    echo
-  done
+      # grab the relevant upstream source
+      if [ -n "${OPT_UPSTREAM}" ]
+      then
+        _package_upstream_checkout
+      fi
 
-  _info "Completed."
+      echo
+    done
+
+    _info "Completed."
+  fi
 }
 

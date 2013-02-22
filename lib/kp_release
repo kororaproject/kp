@@ -172,44 +172,48 @@ function main {
     exit 1
   fi
 
-  _OPTS=
+  list_kickstart_validate "${RELEASES}"
+  if [ ${?} -gt 0 ]
+  then
 
-  [ ! -z ${OPT_VERBOSE} ] && _OPTS="${_OPTS} --verbose"
-  [ ! -z ${OPT_CACHE_ONLY} ] && _OPTS="${_OPTS} --cache-only"
+    _OPTS=
 
-  # build all requested releases
-  for R in $(list_kickstart_available "${RELEASES}")
-  do
+    [ ! -z ${OPT_VERBOSE} ] && _OPTS="${_OPTS} --verbose"
+    [ ! -z ${OPT_CACHE_ONLY} ] && _OPTS="${_OPTS} --cache-only"
 
-    #
-    _info "Preparing to build: $R"
-    _info "  - Codename:     ${OPT_RELEASE_CODENAME}"
-    _info "  - Version:      ${OPT_RELEASE_VERSION}"
-    _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
+    # build all requested releases
+    for R in $(list_kickstart_available "${RELEASES}")
+    do
 
-    _FILE="korora-${OPT_RELEASE_VERSION}-${OPT_RELEASE_BASEARCH}-${R}-live"
+      #
+      _info "Preparing to build: $R"
+      _info "  - Codename:     ${OPT_RELEASE_CODENAME}"
+      _info "  - Version:      ${OPT_RELEASE_VERSION}"
+      _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
 
-    # create working directory
-    _TEMPLATE="/tmp/${R}.ks.${RANDOM}"
-    _TEMPLATE_FLATTENED="/tmp/${R}-flattened.ks.${RANDOM}"
+      _FILE="korora-${OPT_RELEASE_VERSION}-${OPT_RELEASE_BASEARCH}-${R}-live"
 
-    _info "Preparing release template: ${_TEMPLATE}"
+      # create working directory
+      _TEMPLATE="/tmp/${R}.ks.${RANDOM}"
+      _TEMPLATE_FLATTENED="/tmp/${R}-flattened.ks.${RANDOM}"
 
-    #
-    _template_inflate "${_TEMPLATE}" "${WORKING_DIR}/conf/kickstart.d/${R}.ks"
+      _info "Preparing release template: ${_TEMPLATE}"
 
-    # flattening template
-    _info "Flattening template into: ${_TEMPLATE_FLATTENED}"
-    ksflatten -c "${_TEMPLATE}" -o "${_TEMPLATE_FLATTENED}"
+      #
+      _template_inflate "${_TEMPLATE}" "${WORKING_DIR}/conf/kickstart.d/${R}.ks"
 
-    # create the CD
-    _info "Creating release ..."
-    setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
+      # flattening template
+      _info "Flattening template into: ${_TEMPLATE_FLATTENED}"
+      ksflatten -c "${_TEMPLATE}" -o "${_TEMPLATE_FLATTENED}"
 
-    # livemedia-creator --make-iso --ks="${_TEMPLATE_FLATTENED}" --image-name="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --project="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --releasever="${OPT_RELEASE_VERSION}" --arch="${OPT_RELEASE_BASEARCH}" --tmp="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}" --no-virt
+      # create the CD
+      _info "Creating release ..."
+      setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --product="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
 
-    # clean up our inflated template file
-    #rm -f "${_TEMPLATE}" "${_TEMPLATE_FLATTENED}"
-  done
+      # livemedia-creator --make-iso --ks="${_TEMPLATE_FLATTENED}" --image-name="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --project="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --releasever="${OPT_RELEASE_VERSION}" --arch="${OPT_RELEASE_BASEARCH}" --tmp="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}" --no-virt
+
+      # clean up our inflated template file
+      #rm -f "${_TEMPLATE}" "${_TEMPLATE_FLATTENED}"
+    done
+  fi
 }
-

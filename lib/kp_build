@@ -373,92 +373,97 @@ function parse_args {
 #
 
 function main {
-if [ -n "$(grep 1 /sys/fs/selinux/enforce)" ]
+  list_config_validate "${PACKAGES}"
+  if [ ${?} -gt 0 ]
   then
-    _error "To avoid build errors, it is required that selinux be put into permissive mode"
-    exit 1
-  fi
 
-  _PACKAGE_BUILT=
-
-  _info "Building for ${OPT_DIST} ${OPT_RELEASEVER} (${OPT_BASEARCH})"
-
-  if [ ! -z ${OPT_MOCK_CLEAN} ]
-  then
-    initialise_mock
-  fi
-
-  _REPO_SOURCE_DIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/source"
-  _REPO_ARCH_DIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/${OPT_BASEARCH}"
-
-  _debug "Copying source packages to: ${_REPO_SOURCE_DIR}"
-  _debug "Copying arch packages to: ${_REPO_ARCH_DIR}"
-  _mkdir "${_REPO_ARCH_DIR}"
-  _mkdir "${_REPO_SOURCE_DIR}"
-
-  # load the configuration
-  for F in $(list_config_available "${PACKAGES}")
-  do
-    load_config ${F}
-    [ ${?} -ne 0 ] && continue
-
-    _info "Building: ${KP_NAME}"
-
-    if [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}" ]
+    if [ -n "$(grep 1 /sys/fs/selinux/enforce)" ]
     then
-      _error "Package is not checked out, skipping"
-      continue
+      _error "To avoid build errors, it is required that selinux be put into permissive mode"
+      exit 1
     fi
 
-    if [ ! -z ${OPT_MOCK_CLEAN_EACH} -a -z ${_MOCK_CLEAN} ]
+    _PACKAGE_BUILT=
+
+    _info "Building for ${OPT_DIST} ${OPT_RELEASEVER} (${OPT_BASEARCH})"
+
+    if [ ! -z ${OPT_MOCK_CLEAN} ]
     then
       initialise_mock
     fi
 
-    [ "${KP_UPSTREAM_SRC_TYPE}" == "upstream" ] && check_upstream ${F}
+    _REPO_SOURCE_DIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/source"
+    _REPO_ARCH_DIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/${OPT_BASEARCH}"
 
-    # ensure any build helpers are reset before sourcing
-    source "${LIB_DIR}/kp_buildhelper"
+    _debug "Copying source packages to: ${_REPO_SOURCE_DIR}"
+    _debug "Copying arch packages to: ${_REPO_ARCH_DIR}"
+    _mkdir "${_REPO_ARCH_DIR}"
+    _mkdir "${_REPO_SOURCE_DIR}"
 
-    # source the build helper if it exists
-    if [ -r "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/build.helper" ]
+    # load the configuration
+    for F in $(list_config_available "${PACKAGES}")
+    do
+      load_config ${F}
+      [ ${?} -ne 0 ] && continue
+
+      _info "Building: ${KP_NAME}"
+
+      if [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}" ]
+      then
+        _error "Package is not checked out, skipping"
+        continue
+      fi
+
+      if [ ! -z ${OPT_MOCK_CLEAN_EACH} -a -z ${_MOCK_CLEAN} ]
+      then
+        initialise_mock
+      fi
+
+      [ "${KP_UPSTREAM_SRC_TYPE}" == "upstream" ] && check_upstream ${F}
+
+      # ensure any build helpers are reset before sourcing
+      source "${LIB_DIR}/kp_buildhelper"
+
+      # source the build helper if it exists
+      if [ -r "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/build.helper" ]
+      then
+        source "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/build.helper"
+      elif [ "${KP_UPSTREAM_SRC_TYPE}" == "git" ]
+      then
+        _warn "This is a \"git\" upstream package. Due to SPEC file limitations it is strongly recommended that a build.helper be implemented for this package."
+      fi
+
+      build_pre_init || continue
+
+      generate_spec ${F} || continue
+
+      build_pre_fetch || continue
+
+      gather_source ${F} || continue
+
+      build_pre_build || continue
+
+      mock_build ${F} || continue
+
+      build_post_build || continue
+
+      _PACKAGE_BUILT=1
+
+      echo
+    done
+
+    # rebuild the repository directory
+    if [ ! -z "${_PACKAGE_BUILT}" ]
     then
-      source "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/build.helper"
-    elif [ "${KP_UPSTREAM_SRC_TYPE}" == "git" ]
-    then
-      _warn "This is a \"git\" upstream package. Due to SPEC file limitations it is strongly recommended that a build.helper be implemented for this package."
+      _info "Rebuilding repository metadata ..."
+
+      [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
+      createrepo ${_VERBOSE} "${_REPO_ARCH_DIR}"
+      createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
+
+      echo
     fi
 
-    build_pre_init || continue
-
-    generate_spec ${F} || continue
-
-    build_pre_fetch || continue
-
-    gather_source ${F} || continue
-
-    build_pre_build || continue
-
-    mock_build ${F} || continue
-
-    build_post_build || continue
-
-    _PACKAGE_BUILT=1
-
-    echo
-  done
-
-  # rebuild the repository directory
-  if [ ! -z "${_PACKAGE_BUILT}" ]
-  then
-    _info "Rebuilding repository metadata ..."
-
-    [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
-    createrepo ${_VERBOSE} "${_REPO_ARCH_DIR}"
-    createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
-
-    echo
+    _info "Completed."
   fi
-
-  _info "Completed."
 }
