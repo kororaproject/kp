@@ -22,6 +22,17 @@
 # GENERAL
 #
 
+function is_element {
+  local _HAYSTACK _NEEDLE=${1}
+  shift
+
+  for _HAYSTACK; do
+    [[ ${_HAYSTACK} == ${_NEEDLE} ]] && return 0
+  done
+
+  return 1
+}
+
 function is_root {
   [ "$(id -u)" -eq 0 ] && return 0
 
@@ -244,6 +255,40 @@ function load_config {
 # Note: assumes the package config has been sourced
 #
 
+function list_config_validate {
+  _PACKAGES=( ${1:-} )
+  _VALID_PACKAGES=( $(awk -F= '/^KP_NAME=/ { print $2 }' ${WORKING_DIR}/conf/packages.d/kp-*.conf) )
+
+  if [ ${#_PACKAGES} -eq 0 ]
+  then
+    _PACKAGES=( ${_VALID_PACKAGES[@]} )
+  fi
+
+  if [ ${#_VALID_PACKAGES} -eq 0 ]
+  then
+    _error "No valid package configuration available."
+    return 1
+  fi
+
+  _VALID_PACKAGE_COUNT=0
+
+  for P in "${_PACKAGES[@]}"
+  do
+    is_element ${P} "${_VALID_PACKAGES[@]}" && _VALID_PACKAGE_COUNT=$((_VALID_PACKAGE_COUNT+1)) || _error "Invalid package specified: ${P}"
+  done
+
+  return $_VALID_PACKAGE_COUNT
+}
+
+#
+# string list_config_available(string packages)
+#
+# Returns a list of avilable Korora packages. An optional argument "package" can
+# be supplied to filter the list.
+#
+# Note: assumes the package config has been sourced
+#
+
 function list_config_available {
   _PACKAGES=( ${1:-} )
   _FILES=
@@ -285,6 +330,40 @@ function check_config_pacakge {
 # KICKSTART HANDLING FUNCTIONS
 #
 
+
+#
+# string list_kickstart_available(string kickstarts)
+#
+# Returns a list of avilable Korora kickstarts. An optional argument "kickstart" can
+# be supplied to filter the list.
+#
+# Note: assumes the kickstart config has been sourced
+#
+
+function list_kickstart_validate {
+  _KICKSTARTS=( ${1:-} )
+  _VALID_KICKSTARTS=( $(ls -1 ${WORKING_DIR}/conf/kickstart.d/* | sed -r 's|.*/(.*).ks|\1|g') )
+
+  if [ ${#_KICKSTARTS} -eq 0 ]
+  then
+    _KICKSTARTS=( ${_VALID_KICKSTARTS[@]} )
+  fi
+
+  if [ ${#_VALID_KICKSTARTS} -eq 0 ]
+  then
+    _error "No valid kickstarts available."
+    return 1
+  fi
+
+  _VALID_KICKSTART_COUNT=0
+
+  for P in "${_KICKSTARTS[@]}"
+  do
+    is_element ${P} "${_VALID_KICKSTARTS[@]}" && _VALID_KICKSTART_COUNT=$((_VALID_KICKSTART_COUNT+1)) || _error "Invalid kickstart specified: ${P}"
+  done
+
+  return $_VALID_KICKSTART_COUNT
+}
 
 #
 # string list_kickstart_available(string kickstarts)
