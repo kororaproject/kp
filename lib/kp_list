@@ -118,36 +118,46 @@ function parse_args {
 #
 
 function main {
-  _info "Korora Packages:"
+  list_config_validate "${PACKAGES}"
+  if [ ${?} -gt 0 ]
+  then
 
-  # load the configuration
-  for F in $(list_config_available "${PACKAGES}")
-  do
-    load_config ${F} || continue
+    _info "Korora Packages:"
 
-    get_sync_status || continue
+    # load the configuration
+    for F in $(list_config_available "${PACKAGES}")
+    do
+      load_config ${F} || continue
 
-    [ -n "${OPT_CHECKOUT_ONLY}" -a "${KP_PACKAGE_SYNC_STATE}" == "-" ] && continue
+      get_sync_status || continue
 
-    # preserve whitespace in our output
-    IFS="%"
+      [ -n "${OPT_CHECKOUT_ONLY}" -a "${KP_PACKAGE_SYNC_STATE}" == "-" ] && continue
 
-    if [ -z ${OPT_VERBOSE} ]
-    then
-      _info $(printf " %s%s  %-32s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}")
-    else
-      _info $(printf " %s%s  %-32s\t%-16s\t%s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}" "${KP_VERSION}-${KP_RELEASE}" "${KP_URL}")
-    fi
+      # preserve whitespace in our output
+      IFS="%"
 
-    # reset the input field seperator
-    unset IFS
-  done
+      if [ -z ${OPT_VERBOSE} ]
+      then
+        _info $(printf " %s%s  %-32s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}")
+      else
+        _info $(printf " %s%s  %-32s\t%-16s\t%s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}" "${KP_VERSION}-${KP_RELEASE}" "${KP_URL}")
+      fi
 
-  echo
+      # reset the input field seperator
+      unset IFS
+    done
 
-  _info "Korora Releases:"
-  for L in $(list_kickstart_available ${PACKAGES})
-  do
-    _info " -   ${L}"
-  done
+    echo
+  fi
+
+  list_kickstart_validate "${PACKAGES}"
+  if [ ${?} -gt 0 ]
+  then
+
+    _info "Korora Releases:"
+    for L in $(list_kickstart_available ${PACKAGES})
+    do
+      _info " -   ${L}"
+    done
+  fi
 }
