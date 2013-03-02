@@ -23,6 +23,7 @@ OPT_VERBOSE=
 OPT_MOCK_CLEAN=
 OPT_MOCK_CLEAN_EACH=
 OPT_PAUSE_ON_ERROR=
+OPT_NO_SIGN=
 
 OPT_DIST=$(_machine_dist)
 OPT_RELEASEVER=$(_machine_releasever)
@@ -248,16 +249,18 @@ function mock_build {
     return 1
   fi
 
-  _debug "Copying packages ..."
-
   for P in $(grep ^Wrote: /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log | awk {'print $2'} | uniq)
   do
-    P=$(basename $P)
-    if [[ $P =~ src\.rpm$ ]]
+    _P="$(basename ${P})"
+    _SP="/var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/${_P}"
+
+    if [ "${P:(-7)}" == "src.rpm" ]
     then
-      cp -f /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/${P} ${_REPO_SOURCE_DIR}
+      _debug "Copying source package: ${_P}"
+      cp -f ${_SP} ${_REPO_SOURCE_DIR}
     else
-      cp -f /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/${P} ${_REPO_ARCH_DIR}
+      _debug "Copying package: ${_P}"
+      cp -f ${_SP} ${_REPO_ARCH_DIR}
     fi
   done
 }
@@ -288,6 +291,7 @@ function usage {
     --releasever            Same as -r
     --clean                 Same as -x
     --clean-each-package    Same as -X
+    --no-sign               Don't sign package once it's built
     --pause-on-error        Pause before continuing on package build error
     --verbose               Same as -v
     --help                  Same as -?
@@ -303,7 +307,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: clean clean-each-package pause-on-error verbose version help" "a: d: r: x X v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: clean clean-each-package no-sign pause-on-error verbose version help" "a: d: r: x X v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -328,6 +332,9 @@ function parse_args {
         ;;
       -x|--clean)
         OPT_MOCK_CLEAN_EACH=1
+        ;;
+      --no-sign)
+        OPT_NO_SIGN=1
         ;;
       --pause-on-error)
         OPT_PAUSE_ON_ERROR=1
@@ -460,6 +467,16 @@ function main {
       [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
       createrepo ${_VERBOSE} "${_REPO_ARCH_DIR}"
       createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
+
+      echo
+    fi
+
+    if [[ -z "${OPT_NO_SIGN}" || ${OPT_NO_SIGN} -ne 1 ]]
+    then
+      _info "Signing packages ..."
+
+      # supress output for now
+      rpmsign --quiet --key-id=30A55ADD --addsign ${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/*/*.rpm >/dev/null 2>&1
 
       echo
     fi
