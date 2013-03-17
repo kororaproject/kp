@@ -24,6 +24,7 @@ OPT_MOCK_CLEAN=
 OPT_MOCK_CLEAN_EACH=
 OPT_PAUSE_ON_ERROR=
 OPT_NO_SIGN=
+OPT_INCLUDE_DEPRACATED=
 
 OPT_DIST=$(_machine_dist)
 OPT_RELEASEVER=$(_machine_releasever)
@@ -273,29 +274,30 @@ function usage {
   _EXIT_VAL=${1:-0}
 
   cat << EOF
-  Usage: $0 [-vc]
+Usage: $0 [-vc]
 
-  Options:
-    -a   Set base architecture
-    -d   Set distribution
-    -r   Set release version
-    -x   Initialise mock to a clean state before building all packages
-    -X   Initialise mock to a clean state before building each package
-    -v   Show verbose output
-    -?   Show this usage
-    -V   Show version
+Options:
+  -a   Set base architecture
+  -d   Set distribution
+  -r   Set release version
+  -x   Initialise mock to a clean state before building all packages
+  -X   Initialise mock to a clean state before building each package
+  -v   Show verbose output
+  -?   Show this usage
+  -V   Show version
 
-  Long Options:
-    --arch                  Same as -a
-    --distribution          Same as -d
-    --releasever            Same as -r
-    --clean                 Same as -x
-    --clean-each-package    Same as -X
-    --no-sign               Don't sign package once it's built
-    --pause-on-error        Pause before continuing on package build error
-    --verbose               Same as -v
-    --help                  Same as -?
-    --version               Same as -V
+Long Options:
+  --arch                  Same as -a
+  --distribution          Same as -d
+  --releasever            Same as -r
+  --clean                 Same as -x
+  --clean-each-package    Same as -X
+  --no-sign               Don't sign package once it's built
+  --pause-on-error        Pause before continuing on package build error
+  --include-depracated    Include deprecated packages
+  --verbose               Same as -v
+  --help                  Same as -?
+  --version               Same as -V
 
 EOF
 
@@ -307,7 +309,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: clean clean-each-package no-sign pause-on-error verbose version help" "a: d: r: x X v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: clean clean-each-package no-sign pause-on-error include-depracated verbose version help" "a: d: r: x X v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -338,6 +340,9 @@ function parse_args {
         ;;
       --pause-on-error)
         OPT_PAUSE_ON_ERROR=1
+        ;;
+      --include-depracated)
+        OPT_INCLUDE_DEPRACATED=1
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -415,6 +420,13 @@ function main {
 
       _info "Building: ${KP_NAME}"
 
+      # check for package deprecation, skip unless we're including them
+      if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
+      then
+        _debug "Skipping depracated package: ${KP_NAME}"
+        continue
+      fi
+
       if [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}" ]
       then
         _error "Package is not checked out, skipping"
@@ -469,16 +481,16 @@ function main {
       createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
 
       echo
-    fi
 
-    if [[ -z "${OPT_NO_SIGN}" || ${OPT_NO_SIGN} -ne 1 ]]
-    then
-      _info "Signing packages ..."
+      if [[ -z "${OPT_NO_SIGN}" || ${OPT_NO_SIGN} -ne 1 ]]
+      then
+        _info "Signing packages ..."
 
-      # supress output for now
-      rpmsign --quiet --key-id=30A55ADD --addsign ${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/*/*.rpm >/dev/null 2>&1
+        # supress output for now
+        rpmsign --quiet --key-id=30A55ADD --addsign ${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/*/*.rpm >/dev/null 2>&1
 
-      echo
+        echo
+      fi
     fi
 
     _info "Completed."

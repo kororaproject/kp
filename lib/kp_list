@@ -21,6 +21,7 @@
 #
 OPT_VERBOSE=
 OPT_CHECKOUT_ONLY=
+OPT_INCLUDE_DEPRACATED=
 
 
 #
@@ -39,10 +40,11 @@ Options:
   -V   Show version
 
 Long Options:
-  --checkout    Same as -c
-  --verbose     Same as -v
-  --help        Same as -?
-  --version     Same as -V
+  --checkout            Same as -c
+  --include-depracated  Include deprecated packages
+  --verbose             Same as -v
+  --help                Same as -?
+  --version             Same as -V
 
 Package status codes:
   -    Available but not checked out
@@ -65,7 +67,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="checkout verbose version help" "c v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="checkout include-depracated verbose version help" "c v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -75,6 +77,9 @@ function parse_args {
     case "$1" in
       -c|--checkout)
         OPT_CHECKOUT_ONLY=1
+        ;;
+      --include-depracated)
+        OPT_INCLUDE_DEPRACATED=1
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -128,6 +133,13 @@ function main {
     for F in $(list_config_available "${PACKAGES}")
     do
       load_config ${F} || continue
+
+      # check for package deprecation, skip unless we're including them
+      if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
+      then
+        _debug "Skipping depracated package: ${KP_NAME}"
+        continue
+      fi
 
       get_sync_status || continue
 

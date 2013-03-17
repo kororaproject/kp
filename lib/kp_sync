@@ -26,6 +26,7 @@ OPT_PUSH_AFTER_UPDATE=
 OPT_FORCE_REMOTE_FETCH=
 OPT_FORCE_LOCAL_VERSION=
 OPT_CACHE=
+OPT_INCLUDE_DEPRACATED=
 
 #
 # FUNCTIONS
@@ -50,6 +51,7 @@ Long Options:
   --force-local-version  Force the configuration to be updated based on local versions
   --interactive          Same as -i
   --push-updates         Same as -p
+  --include-depracated  Include deprecated packages
   --verbose              Same as -v
   --help                 Same as -?
   --version              Same as -V
@@ -91,7 +93,7 @@ function get_spec_version {
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="cache force-remote-fetch force-local-version verbose version help interactive push-updates" "C v V ? i p" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="cache force-remote-fetch force-local-version include-depracated verbose version help interactive push-updates" "C v V ? i p" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -113,6 +115,9 @@ function parse_args {
         ;;
       -p|--push-updates)
         OPT_PUSH_UPDATES=1
+        ;;
+      --include-depracated)
+        OPT_INCLUDE_DEPRACATED=1
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -207,6 +212,13 @@ function main {
     do
       # load the configuration
       load_config ${F} || continue
+
+      # check for package deprecation, skip unless we're including them
+      if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
+      then
+        _debug "Skipping depracated package: ${KP_NAME}"
+        continue
+      fi
 
       get_sync_status || continue
 
