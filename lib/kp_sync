@@ -201,7 +201,7 @@ function main {
       if [ ${_LR_DELTA} -gt 0 ]
       then
         _info "Pushing local changes upstream ..."
-        git push origin master || exit 1
+        git push --all origin || exit 1
       fi
 
       _popd
@@ -274,7 +274,7 @@ function main {
         if [ ${_LR_DELTA} -gt 0 ]
         then
           _info "Pushing local changes upstream ..."
-          git push origin master || exit 1
+          git push --all origin || exit 1
         fi
 
         # recalculate local head
@@ -304,7 +304,7 @@ function main {
 
         git add "packages.d/${F}"
         git commit -m "updated: version bump for ${KP_NAME} ${_VERBOSE_FORCE}"
-        git push origin master
+        git push --all origin
 
         _popd
       fi
