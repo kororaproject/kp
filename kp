@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2012 "Korora Project" <dev@kororaproject.org>
+# Copyright 2012-2013 "Korora Project" <dev@kororaproject.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the temms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ VERSION="0.1.0"
 #
 SUB_COMMAND=""
 CONFIG_FILE=""
+_CALLED=$(dirname "${0}")
 
 # assume first parameter to be the subcommand
 while [ $# -gt 0 ] && [ -z ${SUB_COMMAND} ]
@@ -77,6 +78,8 @@ done
 [ -z ${WORKING_DIR} ] && WORKING_DIR="/var/lib/kp"
 [ -z ${RELEASE_DIR} ] && RELEASE_DIR="/tmp"
 [ -z ${LOG_DIR} ]     && LOG_DIR="/usr/share/lib/kp/log"
+
+[[ -z ${CONFIG_FILE} ]] && [[ -f "${_CALLED}/kp.conf" ]] && CONFIG_FILE="${_CALLED}/kp.conf"
 
 #
 # INCLUDES
