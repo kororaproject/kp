@@ -154,7 +154,7 @@ function gather_source {
       for F in $(spectool -l "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/${_BUILD_SPEC}" | awk '{print $2}')
       do
         # mark as incomplete if we can't find a file
-        [ -r "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/ ${F##*/}" ] || _COMPLETE=0
+        [ -r "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/${F##*/}" ] || _COMPLETE=0
       done
       unset IFS
 
