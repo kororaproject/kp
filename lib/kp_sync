@@ -61,31 +61,6 @@ EOF
   exit ${_EXIT_VAL};
 }
 
-function get_spec_version {
-  _FILE=${1:-}
-
-  _SPEC_VERSION=0
-  _SPEC_RELEASE=0
-
-  # ensure the file is readable
-  if [ -r "${_FILE}" ]
-  then
-    # extract all global/define variables and evaluate them to the stack via "name=foo"
-    IFS=$'\n'
-    for V in $(grep -e ^%define -e ^%global ${_FILE} | sed -r -e 's/-([a-zA-Z0-9]+)/_\1/g' -e 's/%(define|global)\s+([a-zA-Z0-9_]+)\s+(.*)/\2="\3"/' )
-    do
-      eval "__$V"
-    done
-    unset IFS
-
-    # perform variable substition by replace spec specific variables (%{var}) with our stack variables ($__var) and evaulate
-    _SPEC_VERSION=$(awk '/^Version:/ { print $2 }' "${_FILE}" | sed -r -e "s/%\{([^\}]+)\}/\$\{__\\1\}/g" -e 's/-([a-zA-Z0-9]+)/_\1/g')
-    _SPEC_VERSION=$(eval echo ${_SPEC_VERSION})
-    _SPEC_RELEASE=$(awk '/^Release:/ { print $2 }' ${_FILE} | sed -r -e 's/%\{\?dist\}(.*)/\1/' -e "s/%\{([^}]+)\}/\$\{__\\1\}/g" -e 's/-([a-zA-Z0-9]+)/_\1/g')
-    _SPEC_RELEASE=$(eval echo ${_SPEC_RELEASE})
-  fi
-}
-
 
 
 #
