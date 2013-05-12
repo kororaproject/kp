@@ -52,7 +52,7 @@ function _template_inflate {
   sed -i "s@%%KP_RELEASE%%@${KP_RELEASE}@g" ${_OUT_FILE}
 }
 
-function check_upstream {
+function _check_upstream {
   echo "check_upstream"
   if [ -d "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream" ]
   then
@@ -61,14 +61,14 @@ function check_upstream {
   fi
 }
 
-function initialise_mock {
+function _initialise_mock {
   _debug "Initialising mock build environment.."
   mock --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --clean
   mock --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --init
   _MOCK_CLEAN=1
 }
 
-function generate_spec {
+function _generate_spec {
   _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/"
 
   # calculate patch list
@@ -98,10 +98,14 @@ function generate_spec {
   else
     _BUILD_SPEC="${KP_BUILD_SPEC}"
   fi
+
+  # calculate the working version and release now that the spec has been generated
+  get_spec_version "${_BUILD_SPEC}" || exit 1
+
   _popd
 }
 
-function gather_source {
+function _gather_source {
   _debug "Gathering source ..."
 
   _RET=0
@@ -203,7 +207,7 @@ function gather_source {
         _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream"
 
         _debug "Creating (local) source tarball ..."
-        git archive --format=tar.gz --prefix="${KP_NAME}-${KP_VERSION}/" -o "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/${KP_NAME}-${KP_VERSION}.tar.gz" HEAD || _RET=1
+        git archive --format=tar.gz --prefix="${KP_NAME}-${_SPEC_VERSION}/" -o "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/sources/${KP_NAME}-${_SPEC_VERSION}.tar.gz" HEAD || _RET=1
 
         _popd
       else
@@ -220,7 +224,7 @@ function gather_source {
   return ${_RET}
 }
 
-function mock_build {
+function _mock_build {
   _pushd "${WORKING_PACKAGES_DIR}/$KP_NAME/build/"
 
   [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
@@ -435,10 +439,10 @@ function main {
 
       if [ ! -z ${OPT_MOCK_CLEAN_EACH} -a -z ${_MOCK_CLEAN} ]
       then
-        initialise_mock
+        _initialise_mock
       fi
 
-      [ "${KP_UPSTREAM_SRC_TYPE}" == "upstream" ] && check_upstream ${F}
+      [ "${KP_UPSTREAM_SRC_TYPE}" == "upstream" ] && _check_upstream ${F}
 
       # ensure any build helpers are reset before sourcing
       source "${LIB_DIR}/kp_buildhelper"
@@ -454,15 +458,15 @@ function main {
 
       build_pre_init || continue
 
-      generate_spec ${F} || continue
+      _generate_spec ${F} || continue
 
       build_pre_fetch || continue
 
-      gather_source ${F} || continue
+      _gather_source ${F} || continue
 
       build_pre_build || continue
 
-      mock_build ${F} || continue
+      _mock_build ${F} || continue
 
       build_post_build || continue
 
