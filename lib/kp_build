@@ -422,7 +422,7 @@ function main {
       load_config ${F}
       [ ${?} -ne 0 ] && continue
 
-      _info "Building: ${KP_NAME}"
+      _info "Building: ${KP_NAME} (${KP_VERSION}-${KP_RELEASE})"
 
       # check for package deprecation, skip unless we're including them
       if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
