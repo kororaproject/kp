@@ -110,6 +110,7 @@ function parse_args {
     case "$1" in
       -t|--release-title)
         OPT_RELEASE_TITLE="$2"
+        echo $2 $3
         shift
         ;;
       -r|--release-version)
@@ -191,6 +192,7 @@ function main {
 
       #
       _info "Preparing to build: $R"
+      _info "  - Title:        ${OPT_RELEASE_TITLE}"
       _info "  - Codename:     ${OPT_RELEASE_CODENAME}"
       _info "  - Version:      ${OPT_RELEASE_VERSION}"
       _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
