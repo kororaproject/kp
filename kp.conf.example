@@ -17,3 +17,7 @@ TMP_DIR=/var/lib/kp
 
 # Enable debug
 DEBUG=1
+
+# Set the key to use for a release version, e.g. 18 and 19
+KEY_ID[18]=30B55DCA
+KEY_ID[19]=DCBE2AC3

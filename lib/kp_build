@@ -491,11 +491,16 @@ function main {
         _info "Signing packages ..."
 
         # supress output for now
-        rpmsign --quiet --key-id=30A55ADD --addsign ${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/*/*.rpm >/dev/null 2>&1
-        if [ $? -ne 0 ]
+        if [ -n "${KEY_ID[${OPT_RELEASEVER}]}" ]
         then
-          _error "Could not sign packages."
-          exit 1
+          rpmsign --quiet --key-id=${KEY_ID[${OPT_RELEASEVER}]} --addsign ${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/*/*.rpm >/dev/null 2>&1
+          if [ $? -ne 0 ]
+          then
+            _error "Could not sign packages."
+            exit 1
+          fi
+        else
+          _info "Could not find gpg key, make sure KEY_ID${OPT_RELEASEVER} is set in kp.conf"
         fi
         echo
       fi
