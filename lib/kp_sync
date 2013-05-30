@@ -23,6 +23,7 @@ OPT_VERBOSE=
 OPT_CHECKOUT_ONLY=
 OPT_INTERACTIVE=
 OPT_PUSH_AFTER_UPDATE=
+OPT_RESET=
 OPT_FORCE_REMOTE_FETCH=
 OPT_FORCE_LOCAL_VERSION=
 OPT_CACHE=
@@ -68,7 +69,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="cache force-remote-fetch force-local-version include-depracated verbose version help interactive push-updates" "C v V ? i p" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="cache reset force-remote-fetch force-local-version include-depracated verbose version help interactive push-updates" "C v V ? i p" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -78,6 +79,9 @@ function parse_args {
     case "$1" in
       -C|--cache)
         OPT_CACHE=1
+        ;;
+      --reset)
+        OPT_RESET=1
         ;;
       --force-remote-fetch)
         OPT_FORCE_REMOTE_FETCH=1
@@ -154,6 +158,11 @@ function main {
 
       _pushd "${WORKING_DIR}/conf"
 
+      if [ "${OPT_RESET}" == "1" ]
+      then
+        git reset --hard
+      fi
+
       git remote update >/dev/null 2>&1
 
       _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1 master)
@@ -204,6 +213,11 @@ function main {
 
       # move to local working dir
       _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}"
+
+      if [ "${OPT_RESET}" == "1" ]
+      then
+        git reset --hard
+      fi
 
       # check package version with spec
       get_spec_version "build/${KP_BUILD_SPEC}"
