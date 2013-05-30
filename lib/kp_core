@@ -574,7 +574,7 @@ function get_spec_version {
     IFS=$'\n'
     for V in $(grep -e ^%define -e ^%global ${_FILE} | sed -r -e 's/-([a-zA-Z0-9]+)/_\1/g' -e 's/%(define|global)\s+([a-zA-Z0-9_]+)\s+([^ ]+)/\2="\3"/' )
     do
-      eval "__$V"
+      eval "__$V" 2>/dev/null
     done
     unset IFS
 
