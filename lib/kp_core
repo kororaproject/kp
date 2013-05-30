@@ -572,7 +572,7 @@ function get_spec_version {
   then
     # extract all global/define variables and evaluate them to the stack via "name=foo"
     IFS=$'\n'
-    for V in $(grep -e ^%define -e ^%global ${_FILE} | sed -r -e 's/-([a-zA-Z0-9]+)/_\1/g' -e 's/%(define|global)\s+([a-zA-Z0-9_]+)\s+(.*)/\2="\3"/' )
+    for V in $(grep -e ^%define -e ^%global ${_FILE} | sed -r -e 's/-([a-zA-Z0-9]+)/_\1/g' -e 's/%(define|global)\s+([a-zA-Z0-9_]+)\s+([^ ]+)/\2="\3"/' )
     do
       eval "__$V"
     done
