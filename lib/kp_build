@@ -422,7 +422,7 @@ function main {
       load_config ${F}
       [ ${?} -ne 0 ] && continue
 
-      _info "Building: ${KP_NAME} (${KP_VERSION}-${KP_RELEASE})"
+      _info "Loaded config: ${KP_NAME}"
 
       # check for package deprecation, skip unless we're including them
       if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
@@ -466,6 +466,8 @@ function main {
 
       build_pre_build || continue
 
+      _info "Building: ${KP_NAME} (${_SPEC_VERSION}-${_SPEC_RELEASE})"
+
       _mock_build ${F} || continue
 
       build_post_build || continue
@@ -493,7 +495,9 @@ function main {
         # supress output for now
         if [ -n "${KEY_ID[${OPT_RELEASEVER}]}" ]
         then
+          _info "  - using key ${KEY_ID[${OPT_RELEASEVER}]}"
           rpmsign --quiet --key-id=${KEY_ID[${OPT_RELEASEVER}]} --addsign ${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/*/*.rpm >/dev/null 2>&1
+
           if [ $? -ne 0 ]
           then
             _error "Could not sign packages."
