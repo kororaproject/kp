@@ -50,6 +50,9 @@ do
     release|--release)
       SUB_COMMAND=release
       ;;
+    upstream|--upstream)
+      SUB_COMMAND=upstream
+      ;;
     --config*)
       if [ ${#1} -eq 8 ]
       then
