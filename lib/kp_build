@@ -480,14 +480,6 @@ function main {
     # rebuild the repository directory
     if [ ! -z "${_PACKAGE_BUILT}" ]
     then
-      _info "Rebuilding repository metadata ..."
-
-      [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
-      createrepo ${_VERBOSE} "${_REPO_ARCH_DIR}"
-      createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
-
-      echo
-
       if [[ -z "${OPT_NO_SIGN}" || ${OPT_NO_SIGN} -ne 1 ]]
       then
         _info "Signing packages ..."
@@ -508,6 +500,13 @@ function main {
         fi
         echo
       fi
+
+      _info "Rebuilding repository metadata ..."
+
+      [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
+      createrepo ${_VERBOSE} "${_REPO_ARCH_DIR}"
+      createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
+      echo
     fi
 
     _info "Completed."
