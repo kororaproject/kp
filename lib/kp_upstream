@@ -105,7 +105,7 @@ function main {
     x=${KP_NAME}
     if [ ${KP_NAME} == "korora-backgrounds" ]
     then
-      x="spherical-cow-backgrounds"
+      x="schroedinger-cat-backgrounds"
     elif [ ${KP_NAME} == "korora-release" ]
     then
       x="generic-release"
