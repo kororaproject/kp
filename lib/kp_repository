@@ -58,6 +58,7 @@ function _make_deltarpms {
     # otherwise we need to build an drpm for this and all previous rpms of this name
     else
       _info "  + building delta"
+      mkdir -p drpms
 
       for P_RPM in ${DELTA[@]}
       do
@@ -66,9 +67,9 @@ function _make_deltarpms {
 
         _debug "    - ${P_EVR} -> ${EVR} = ${P_EVR}_${EVR}.${ARCH}.drpm"
 
-        if [ ! -f "${D_RPM}" ]
+        if [ ! -f "drpms/${D_RPM}" ]
         then
-          makedeltarpm ${_VERBOSE} "${P_RPM}" "${RPM}" "${D_RPM}"
+          makedeltarpm ${_VERBOSE} "${P_RPM}" "${RPM}" "drpms/${D_RPM}"
         else
           _debug "    - skipping, delta already exists."
         fi
@@ -231,8 +232,8 @@ function main {
   _info "Rebuilding repository metadata ..."
 
   [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
-  createrepo ${_VERBOSE} "${_REPO_ARCH_DIR}"
-  createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
+  createrepo ${_VERBOSE} --deltas "${_REPO_ARCH_DIR}"
+  createrepo ${_VERBOSE} --deltas "${_REPO_SOURCE_DIR}"
 
   echo
 

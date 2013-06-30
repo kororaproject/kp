@@ -504,8 +504,8 @@ function main {
       _info "Rebuilding repository metadata ..."
 
       [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
-      createrepo ${_VERBOSE} "${_REPO_ARCH_DIR}"
-      createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
+      createrepo ${_VERBOSE} --deltas "${_REPO_ARCH_DIR}"
+      createrepo ${_VERBOSE} --deltas "${_REPO_SOURCE_DIR}"
       echo
     fi
 
