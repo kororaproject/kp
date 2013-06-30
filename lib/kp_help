@@ -84,12 +84,15 @@ function parse_args {
 #
 
 function main {
-  echo -e "Usage: kp --[subcommand] --help\n"
-  echo -e "Subcommands:
+  echo -e "Usage: kp command [--help] <args>\n"
+  echo -e "Commands:
   list
   init
   checkout
   build
+  repository
   sync
-  release\n"
+  release
+  upstream"
+  echo
 }

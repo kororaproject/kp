@@ -1,0 +1,241 @@
+#!/bin/bash
+#
+# Copyright 2012-2013 "Korora Project" <dev@kororaproject.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the temms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+#
+# INITIALISE
+#
+OPT_VERBOSE=
+OPT_NO_DELTA=
+OPT_NO_SIGN=
+
+OPT_DIST=$(_machine_dist)
+OPT_RELEASEVER=$(_machine_releasever)
+OPT_BASEARCH=$(_machine_basearch)
+
+#
+# PRIVATE FUNCTIONS
+#
+
+function _make_deltarpms {
+  DIR="${1:-}"
+  [ ! -d "${DIR}" ] && return 1
+
+  _pushd "${DIR}"
+
+  [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="" || _VERBOSE="-v"
+
+  # get list of rpms
+  RPMS=$(find . | grep "\.rpm$")
+
+  # extract name, epoch-version-revision, arch for processing and sorting
+  RPMS_INFO=$(for RPM in $RPMS; do rpm -qp --queryformat="%{NAME} %{EVR} %{ARCH} " $RPM; echo "${RPM}\n"; done)
+
+  # process each rpm sorted on name then evr
+  echo -e $RPMS_INFO | sort -k1,1d -k2,2V | while read NAME EVR ARCH RPM
+  do
+    # reset delta process array if were not on the same name
+    if [ "${CNAME}" != "${NAME}" ]
+    then
+      CNAME="${NAME}"
+      _info "  - processing: $CNAME"
+      unset DELTA
+
+    # otherwise we need to build an drpm for this and all previous rpms of this name
+    else
+      _info "  + building delta"
+
+      for P_RPM in ${DELTA[@]}
+      do
+        P_EVR=$(rpm -qp --queryformat="%{EVR}" ${P_RPM})
+        D_RPM="${NAME}-${P_EVR}_${EVR}.${ARCH}.drpm"
+
+        _debug "    - ${P_EVR} -> ${EVR} = ${P_EVR}_${EVR}.${ARCH}.drpm"
+
+        if [ ! -f "${D_RPM}" ]
+        then
+          makedeltarpm ${_VERBOSE} "${P_RPM}" "${RPM}" "${D_RPM}"
+        else
+          _debug "    - skipping, delta already exists."
+        fi
+      done
+
+    fi
+
+    # add rpm to our delta process array
+    DELTA[${#DELTA[@]}]="${RPM}"
+  done
+
+  _popd
+}
+
+#
+# FUNCTIONS
+#
+
+function usage {
+  _EXIT_VAL=${1:-0}
+
+  cat << EOF
+Usage: $0 [-vc]
+
+Options:
+  -a   Set base architecture
+  -d   Set distribution
+  -r   Set release version
+  -v   Show verbose output
+  -?   Show this usage
+  -V   Show version
+
+Long Options:
+  --arch                  Same as -a
+  --distribution          Same as -d
+  --releasever            Same as -r
+  --no-delta              Don't create delta RPMs
+  --no-sign               Don't sign package once it's built
+  --verbose               Same as -v
+  --help                  Same as -?
+  --version               Same as -V
+
+EOF
+
+  exit ${_EXIT_VAL};
+}
+
+#
+# PARSE COMMAND LINE
+#
+
+function parse_args {
+  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: no-delta no-sign verbose version help" "a: d: r: v V ?" $@)
+  [ ${?} -ne 0 ] && usage 1
+
+  set -- ${CMD_LINE}
+
+  while [ $# -gt 0 ]
+  do
+    case "$1" in
+      -a|--arch)
+        OPT_BASEARCH=$2
+        shift
+        ;;
+      -d|--distribition)
+        OPT_DIST=$2
+        shift
+        ;;
+      -r|--releasever)
+        OPT_RELEASEVER=$2
+        shift
+        ;;
+      --no-delta)
+        OPT_NO_DELTA=1
+        ;;
+      --no-sign)
+        OPT_NO_SIGN=1
+        ;;
+      -v|--verbose)
+        OPT_VERBOSE=1
+        ;;
+      -V|--version)
+        version 0
+        ;;
+      -h|--help)
+        usage 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        usage 1
+        ;;
+      *)
+        break
+    esac
+    shift
+  done
+}
+
+#
+# MAIN
+#
+
+function main {
+  _info "Updating repository for ${OPT_DIST} ${OPT_RELEASEVER} (${OPT_BASEARCH})"
+
+  _REPO_SOURCE_DIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/source"
+  _REPO_ARCH_DIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/${OPT_BASEARCH}"
+
+  if [ ! -d "${_REPO_SOURCE_DIR}" ]
+  then
+    _error "Source packages directory does not exist. No source packages have been built?"
+    exit 1
+  fi
+
+  if [ ! -d "${_REPO_ARCH_DIR}" ]
+  then
+    _error "Arch packages directory does not exist. No packages have been built?"
+    exit 1
+  fi
+
+
+  if [[ -z "${OPT_NO_DELTA}" || ${OPT_NO_DELTA} -ne 1 ]]
+  then
+    _info "Creating delta packages ..."
+
+    _make_deltarpms "${_REPO_ARCH_DIR}"
+    if [ $? -ne 0 ]
+    then
+      _error "Could not make all deltarpm packages."
+      exit 1
+    fi
+  fi
+
+  if [[ -z "${OPT_NO_SIGN}" || ${OPT_NO_SIGN} -ne 1 ]]
+  then
+    _info "Signing packages ..."
+
+    # supress output for now
+    if [ -n "${KEY_ID[${OPT_RELEASEVER}]}" ]
+    then
+      [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="--quiet" || _VERBOSE="-v"
+
+      _info "  - using key ${KEY_ID[${OPT_RELEASEVER}]}"
+      rpmsign --quiet --key-id=${KEY_ID[${OPT_RELEASEVER}]} --addsign ${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/*/*.rpm >/dev/null 2>&1
+
+      if [ $? -ne 0 ]
+      then
+        _error "Could not sign packages."
+        exit 1
+      fi
+    else
+      _info "Could not find gpg key, make sure KEY_ID${OPT_RELEASEVER} is set in kp.conf"
+    fi
+    echo
+  fi
+
+  _info "Rebuilding repository metadata ..."
+
+  [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
+  createrepo ${_VERBOSE} "${_REPO_ARCH_DIR}"
+  createrepo ${_VERBOSE} "${_REPO_SOURCE_DIR}"
+
+  echo
+
+  _info "Completed."
+}
+

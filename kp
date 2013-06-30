@@ -41,6 +41,9 @@ do
     build|--build)
       SUB_COMMAND=build
       ;;
+    repository|--repository)
+      SUB_COMMAND=repository
+      ;;
     sync|--sync)
       SUB_COMMAND=sync
       ;;
