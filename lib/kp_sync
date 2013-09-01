@@ -28,6 +28,8 @@ OPT_FORCE_REMOTE_FETCH=
 OPT_FORCE_LOCAL_VERSION=
 OPT_CACHE=
 OPT_INCLUDE_DEPRACATED=
+OPT_NO_PULL=1
+OPT_NO_PUSH=1
 
 #
 # FUNCTIONS
@@ -44,15 +46,15 @@ Options:
   -?   Show this usage
   -V   Show version
   -i   Interactive
-  -p   Push updates
 
 Long Options:
   --cache                Same as -C
   --force-remote-fetch   Force a sync with remote upsteam
   --force-local-version  Force the configuration to be updated based on local versions
   --interactive          Same as -i
-  --push-updates         Same as -p
-  --include-depracated  Include deprecated packages
+  --push                 Push local changes upstream
+  --pull                 Merge upstream changes locally
+  --include-depracated   Include deprecated packages
   --verbose              Same as -v
   --help                 Same as -?
   --version              Same as -V
@@ -69,7 +71,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="cache reset force-remote-fetch force-local-version include-depracated verbose version help interactive push-updates" "C v V ? i p" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="cache reset force-remote-fetch force-local-version include-depracated verbose version help interactive push pull" "C v V ? i" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -92,8 +94,11 @@ function parse_args {
       -i|--interactive)
         OPT_INTERACTIVE=1
         ;;
-      -p|--push-updates)
-        OPT_PUSH_UPDATES=1
+      --pull)
+        OPT_NO_PULL=
+        ;;
+      --push)
+        OPT_NO_PUSH=
         ;;
       --include-depracated)
         OPT_INCLUDE_DEPRACATED=1
@@ -152,7 +157,7 @@ function main {
     fi
 
     # synchronise package cache first
-    if [ "${OPT_CACHE}" != "1" ]
+    if [[ -z "${OPT_CACHE}" || ${OPT_CACHE} -ne 1 ]]
     then
       _info "Synchronising upstream configuration information ..."
 
@@ -163,30 +168,13 @@ function main {
         git reset --hard
       fi
 
-      git remote update >/dev/null 2>&1
+      # we should always attempt a remote pull  (with rebase) on our configuration
+      # it's the only way to manage upstream sync
+      git pull --rebase || exit 1
 
-      _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1 master)
-      _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/master)
-
-      _RL_COMMIT_LOC=$(($(git log --pretty=format:'%H' origin/master | grep -n ${_LOCAL_HEAD} | cut -d: -f1)-1))
-      _LR_COMMIT_LOC=$(($(git log --pretty=format:'%H' master | grep -n ${_REMOTE_HEAD} | cut -d: -f1)-1))
-
-      [ ${_LR_COMMIT_LOC} -le 0 ] && _LR_DELTA=0 || _LR_DELTA="+${_LR_COMMIT_LOC}"
-      [ ${_RL_COMMIT_LOC} -le 0 ] && _RL_DELTA=0 || _RL_DELTA="+${_RL_COMMIT_LOC}"
-
-      _info " - L:${_LOCAL_HEAD} (${_LR_DELTA}-${_RL_DELTA}) R:${_REMOTE_HEAD}"
-
-      if [ ${_RL_DELTA} -gt 0 ]
-      then
-        _info "Pulling upstream changes ..."
-        git pull --rebase || exit 1
-      fi
-
-      if [ ${_LR_DELTA} -gt 0 ]
-      then
-        _info "Pushing local changes upstream ..."
-        git push --all origin || exit 1
-      fi
+      # we have no reason to push local changes at this point
+      # as we shouldn't be locally modifying the configuration
+      echo
 
       _popd
     fi
@@ -256,14 +244,24 @@ function main {
 
         if [ ${_RL_DELTA} -gt 0 ]
         then
-          _info "Pulling upstream changes ..."
-          git pull --rebase || exit 1
+          if [[ -z "${OPT_NO_PULL}" || ${OPT_NO_PULL} -eq 1 ]]
+          then
+            _info "Pulling upstream changes ..."
+            git pull --rebase || exit 1
+          else
+            _info "Not pulling upstream changes ..."
+          fi
         fi
 
         if [ ${_LR_DELTA} -gt 0 ]
         then
-          _info "Pushing local changes upstream ..."
-          git push --all origin || exit 1
+          if [[ -z "${OPT_NO_PULL}" || ${OPT_NO_PULL} -eq 1 ]]
+          then
+            _info "Pushing local changes upstream ..."
+            git push --all origin || exit 1
+          else
+            _info "Not pushing local changes upstream ..."
+          fi
         fi
 
         # recalculate local head
