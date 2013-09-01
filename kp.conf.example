@@ -3,6 +3,7 @@
 # Who to build packages as (defaults to anonymous).
 # Substitute with username to use developer account
 KP_DEV_ACCOUNT=""
+KP_DEV_EMAIL=""
 
 # Protocol for git (can be 'git' or 'https' or 'ssh')
 GIT_PROTOCOL="git"
