@@ -58,18 +58,22 @@ function _make_deltarpms {
     # otherwise we need to build an drpm for this and all previous rpms of this name
     else
       _info "  + building delta"
-      mkdir -p drpms
+      _mkdir drpms
 
       for P_RPM in ${DELTA[@]}
       do
         P_EVR=$(rpm -qp --queryformat="%{EVR}" ${P_RPM})
-        D_RPM="${NAME}-${P_EVR}_${EVR}.${ARCH}.drpm"
+        D_RPM="drpms/${NAME}-${P_EVR}_${EVR}.${ARCH}.drpm"
 
         _debug "    - ${P_EVR} -> ${EVR} = ${P_EVR}_${EVR}.${ARCH}.drpm"
 
-        if [ ! -f "drpms/${D_RPM}" ]
+        if [ ! -f "${D_RPM}" ]
         then
-          makedeltarpm ${_VERBOSE} "${P_RPM}" "${RPM}" "drpms/${D_RPM}"
+          makedeltarpm ${_VERBOSE} "${P_RPM}" "${RPM}" "${D_RPM}"
+          if [ ${?} -ne 0 ]
+          then
+            _error "    ! unable to create delta."
+          fi
         else
           _debug "    - skipping, delta already exists."
         fi
@@ -194,8 +198,10 @@ function main {
   fi
 
 
+  _DELTA=
   if [[ -z "${OPT_NO_DELTA}" || ${OPT_NO_DELTA} -ne 1 ]]
   then
+    _DELTA="--deltas"
     _info "Creating delta packages ..."
 
     _make_deltarpms "${_REPO_ARCH_DIR}"
@@ -224,7 +230,7 @@ function main {
         exit 1
       fi
     else
-      _info "Could not find gpg key, make sure KEY_ID${OPT_RELEASEVER} is set in kp.conf"
+      _info "Could not find gpg key, make sure KEY_ID[${OPT_RELEASEVER}] is set in kp.conf"
     fi
     echo
   fi
@@ -232,8 +238,8 @@ function main {
   _info "Rebuilding repository metadata ..."
 
   [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
-  createrepo ${_VERBOSE} --deltas "${_REPO_ARCH_DIR}"
-  createrepo ${_VERBOSE} --deltas "${_REPO_SOURCE_DIR}"
+  createrepo ${_VERBOSE} ${_DELTAS} "${_REPO_ARCH_DIR}"
+  createrepo ${_VERBOSE} ${_DELTAS} "${_REPO_SOURCE_DIR}"
 
   echo
 
