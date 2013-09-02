@@ -21,12 +21,46 @@
 #
 OPT_VERBOSE=
 OPT_CHECKOUT_ONLY=
-OPT_UPSTREAM=1
+OPT_RELEASE=
+OPT_NO_UPSTREAM=
 
 
 #
 # PRIVATE FUNCTIONS
 #
+function _configuration_branch_active {
+  _pushd "${WORKING_DIR}/conf"
+  _BRANCH_CURRENT=$(_git_branch_active)
+  _popd
+}
+
+function _checkout_configuration_branch {
+  _BRANCH=${1:-}
+
+  # ensure a branch is specified
+  if [ -z "${_BRANCH}" ]
+  then
+    _error "No branch specified for configuration checkout."
+    return 1
+  fi
+
+  _pushd "${WORKING_DIR}/conf"
+
+  _BRANCH_CURRENT=$(_git_branch_active)
+  _RET=0
+
+  if [ "${_BRANCH_CURRENT}" != "${_BRANCH}" ]
+  then
+    _info "Configuration is currently set for: ${_BRANCH_CURRENT}"
+
+    _git_branch_switch "${_BRANCH}"
+    _RET=$?
+  fi
+
+  _popd
+
+  return ${_RET}
+}
 
 #
 # int package_upstream_checkout(void)
@@ -38,7 +72,6 @@ OPT_UPSTREAM=1
 #
 
 function _package_upstream_checkout {
-
   if [ -z ${KP_NAME} ]
   then
     _error "No configuration file loaded (KP_NAME undefined). Unable to checkout package."
@@ -50,7 +83,6 @@ function _package_upstream_checkout {
   fi
 
   _UPSTREAM_DIR="${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream"
-
 
   # need to assess checkout based on type
   if [ "${KP_UPSTREAM_SRC_TYPE}" == "git" ]
@@ -107,27 +139,35 @@ function _package_checkout {
   _WORKING_PATH="${WORKING_PACKAGES_DIR}/${KP_NAME}"
 
   # check if destination path already exists
-  if [ -d "${_WORKING_PATH}" ]
+  if [ ! -d "${_WORKING_PATH}" ]
   then
-    _debug "Project path already exists: ${_WORKING_PATH}"
-    return 0
+    _debug "Creating package path: ${_WORKING_PATH}"
+
+    if ! mkdir -p ${_WORKING_PATH}
+    then
+      _error "Unable to create package path: ${_WORKING_PATH}"
+      return 1
+    fi
+
+    # update tree, fetching all branches and tags
+    _debug "Cloning from: ${KP_URL}"
+
+    _OUT=$(git clone ${KP_URL} ${_WORKING_PATH})
+    if [ ${?} -ne 0 ]
+    then
+      _error "Unable to clone package."
+      return 1
+    fi
   fi
 
-  _debug "Creating package path: ${_WORKING_PATH}"
+  _pushd "${_WORKING_PATH}"
 
-  if ! mkdir -p ${_WORKING_PATH}
-  then
-    _error "Unable to create package path: ${_WORKING_PATH}"
-    return 1
-  fi
+  # switch to our requested branch
+  _git_branch_switch "${OPT_RELEASE}"
 
-  # update tree, fetching all branches and tags
-  _debug "Cloning from: ${KP_URL}"
-
-  _OUT=$(git clone ${KP_URL} ${_WORKING_PATH})
   if [ ${?} -ne 0 ]
   then
-    _error "Unable to clone package."
+    _error "Unable to switch branch."
     return 1
   fi
 
@@ -136,6 +176,9 @@ function _package_checkout {
   # get the last commit and uncommit count
   _LATEST_COMMIT=$(git log --pretty=format:'%H' -n 1)
   _UNCOMMITED_CHANGES=$(git status -s | wc -l)
+
+  _popd
+
   return 0
 }
 
@@ -146,16 +189,18 @@ function usage {
   _EXIT_VAL=${1:-0}
 
   cat << EOF
-  Usage: $0 [-v] package1 package2 ... packageN
+  Usage: $0 [-v] -r RELEASE package1 package2 ... packageN
 
   Options:
-    -n   Don't checkout the upstream source
-    -v   Show verbose output
-    -?   Show this usage
-    -V   Show version
+    -n          Don't checkout the upstream source
+    -r RELEASE  Checkout specified Korora release
+    -v          Show verbose output
+    -?          Show this usage
+    -V          Show version
 
   Long Options:
     --no-upstream  Same as -n
+    --release      Same as -r
     --verbose      Same as -v
     --help         Same as -?
     --version      Same as -V
@@ -170,7 +215,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="no-upstream verbose version help" "n v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="no-upstream release: verbose version help" "n r: v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -178,8 +223,12 @@ function parse_args {
   while [ $# -gt 0 ]
   do
     case "$1" in
-      -U|--upstream)
-        OPT_UPSTREAM=
+      -n|--no-upstream)
+        OPT_NO_UPSTREAM=1
+        ;;
+      -r|--release)
+        shift
+        OPT_RELEASE=$1
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -222,6 +271,17 @@ function parse_args {
 #
 
 function main {
+  # ensure a release is defined
+  if [ -z "${OPT_RELEASE}" ]
+  then
+    _error "No release defined."
+    return 1
+  fi
+
+  _info "Checking out Korora release ${OPT_RELEASE}"
+
+  _checkout_configuration_branch "${OPT_RELEASE}"
+
   list_config_validate "${PACKAGES}"
   if [ ${?} -gt 0 ]
   then
@@ -238,7 +298,7 @@ function main {
       _package_checkout || continue
 
       # grab the relevant upstream source
-      if [ -n "${OPT_UPSTREAM}" ]
+      if [ "${OPT_NO_UPSTREAM}" != "1" ]
       then
         _package_upstream_checkout
       fi

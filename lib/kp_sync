@@ -168,7 +168,7 @@ function main {
         git reset --hard
       fi
 
-      # we should always attempt a remote pull  (with rebase) on our configuration
+      # we should always attempt a remote pull (with rebase) on our configuration
       # it's the only way to manage upstream sync
       git pull --rebase || exit 1
 

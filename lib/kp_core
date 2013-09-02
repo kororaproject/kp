@@ -179,6 +179,62 @@ function _popd {
   popd >/dev/null 2>&1
 }
 
+#
+# GIT HELPERS FUNCTIONS
+#
+function _git_branch_active {
+  __GIT=$(git branch | grep ^* | awk '{print $2}')
+
+  if [ ${?} -eq 0 ]
+  then
+    echo ${__GIT}
+  else
+    _error "${__GIT}"
+  fi
+}
+
+function _git_local_branch_available {
+  __BRANCH=${1:-____}
+
+  git branch -a | grep -v "remotes/" | grep -q "${__BRANCH}$"
+}
+
+function _git_branch_available {
+  __BRANCH=${1:-____}
+
+  git branch -a | grep -q "remotes/origin/${__BRANCH}$"
+}
+
+function _git_branch_switch {
+  __BRANCH=${1:-____}
+
+  _git_branch_available "${__BRANCH}"
+  if [ ${?} -eq 0 ]
+  then
+
+    _git_local_branch_available "${__BRANCH}"
+    if [ ${?} -eq 0 ]
+    then
+      # checkout the local branch which will already be tracking remote
+      _OUT=$(git checkout "${_BRANCH}")
+    else
+      _info "Local branch not available, establishing and tracking remote."
+      # checkout the remote branch with tracking implicit
+      _OUT=$(git checkout --track -b "${__BRANCH}" origin/${__BRANCH})
+    fi
+
+    if [ ${?} -ne 0 ]
+    then
+      _RET=1
+      _error "Unable to checkout ${__BRANCH}. ${_OUT}"
+    fi
+  else
+    _RET=1
+    _error "Configuration branch ${__BRANCH} is not available. ${_OUT}"
+  fi
+
+  return ${_RET}
+}
 
 #
 # CONFIG HANDLING FUNCTIONS
@@ -321,8 +377,6 @@ function check_config_pacakge {
   load_config ${_FILE} || return 1
 
   _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}" || return 1
-
-
 }
 
 
@@ -545,7 +599,7 @@ function get_sync_status {
 #
 # void get_spec_version(string path)
 #
-# Determins the release and version specified in the spec file. The following
+# Determines the release and version specified in the spec file. The following
 # variables will be set:
 #   - _SPEC_VERSION
 #   - _SPEC_RELEASE

@@ -9,12 +9,17 @@ KP_DEV_EMAIL=""
 GIT_PROTOCOL="git"
 
 # URLs for git
-GIT_URL_GIT="git://github.com/kororaproject"
-GIT_URL_HTTP="https://github.com/kororaproject"
-GIT_URL_SSH="git@github.com:kororaproject"
+REPO_USER="kororaproject"
+
+GIT_URL_GIT="git://github.com/${REPO_USER}"
+GIT_URL_HTTP="https://github.com/${REPO_USER}"
+GIT_URL_SSH="git@github.com:${REPO_USER}"
 
 # Temporary location for building packages
 TMP_DIR=/var/lib/kp
+#WORKING_DIR="/var/cache/kp"
+#CONFIG_DIR="/var/cache/kp/conf"
+#LIB_DIR="./lib"
 
 # Enable debug
 DEBUG=1
