@@ -126,8 +126,12 @@ function main {
   list_config_validate "${PACKAGES}"
   if [ ${?} -gt 0 ]
   then
+    _CURRENT_BRANCH=$(_git_branch_active)
+    _info "Active Branch: ${_CURRENT_BRANCH}"
 
-    _info "Korora Packages:"
+    echo
+
+    _info "Packages:"
 
     # load the configuration
     for F in $(list_config_available "${PACKAGES}")
@@ -152,7 +156,7 @@ function main {
       then
         _info $(printf " %s%s  %-32s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}")
       else
-        _info $(printf " %s%s  %-32s\t%-16s\t%s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}" "${KP_VERSION}-${KP_RELEASE}" "${KP_URL}")
+        _info $(printf " %s%s  %-32s\t%-16s\t%-6s\t%s\n" "${KP_PACKAGE_SYNC_STATE}" "${KP_UPSTREAM_SYNC_STATE}" "${KP_NAME}" "${KP_VERSION}-${KP_RELEASE}" "${KP_BRANCH}" "${KP_URL}")
       fi
 
       # reset the input field seperator
@@ -166,7 +170,7 @@ function main {
   if [ ${?} -gt 0 ]
   then
 
-    _info "Korora Releases:"
+    _info "Releases:"
     for L in $(list_kickstart_available ${PACKAGES})
     do
       _info " -   ${L}"
