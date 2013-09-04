@@ -96,40 +96,40 @@ function _log {
 
   if [ -w "${LOG_FILE}" ]
   then
-    echo "L: ${_MSG}" >> ${LOG_FILE}
+    echo -e "L: ${_MSG}" >> ${LOG_FILE}
   fi
 }
 
 function _error {
   _MSG=${1:-""}
 
-  echo "${_MSG}" >&2
+  echo -e "${_MSG}" >&2
 
   if [ -w "${LOG_FILE}" ]
   then
-    echo "E: ${_MSG}" >> ${LOG_FILE}
+    echo -e "E: ${_MSG}" >> ${LOG_FILE}
   fi
 }
 
 function _warn {
   _MSG=${1:-""}
 
-  echo "${_MSG}" >&2
+  echo -e "${_MSG}" >&2
 
   if [ -w "${LOG_FILE}" ]
   then
-    echo "W: ${_MSG}" >> ${LOG_FILE}
+    echo -e "W: ${_MSG}" >> ${LOG_FILE}
   fi
 }
 
 function _info {
   _MSG=${1:-""}
 
-  echo "${_MSG}" >&2
+  echo -e "${_MSG}" >&2
 
   if [ -w "${LOG_FILE}" ]
   then
-    echo "I: ${_MSG}" >> ${LOG_FILE}
+    echo -e "I: ${_MSG}" >> ${LOG_FILE}
   fi
 }
 
@@ -138,11 +138,11 @@ function _debug {
 
   [ -z "${DEBUG}" ] && return 0
 
-  echo "${_MSG}" >&2
+  echo -e "${_MSG}" >&2
 
   if [ -w "${LOG_FILE}" ]
   then
-    echo "D: ${_MSG}" >> ${LOG_FILE}
+    echo -e "D: ${_MSG}" >> ${LOG_FILE}
   fi
 }
 
@@ -199,35 +199,46 @@ function _git_local_branch_available {
   git branch -a | grep -v "remotes/" | grep -q "${__BRANCH}$"
 }
 
-function _git_branch_available {
+function _git_remote_branch_available {
   __BRANCH=${1:-____}
 
   git branch -a | grep -q "remotes/origin/${__BRANCH}$"
 }
 
-function _git_branch_switch {
+function _git_branch_available {
   __BRANCH=${1:-____}
 
-  _git_branch_available "${__BRANCH}"
-  if [ ${?} -eq 0 ]
-  then
+}
 
-    _git_local_branch_available "${__BRANCH}"
-    if [ ${?} -eq 0 ]
-    then
-      # checkout the local branch which will already be tracking remote
-      _OUT=$(git checkout "${_BRANCH}")
-    else
-      _info "Local branch not available, establishing and tracking remote."
-      # checkout the remote branch with tracking implicit
-      _OUT=$(git checkout --track -b "${__BRANCH}" origin/${__BRANCH})
-    fi
+function _git_branch_switch {
+  __BRANCH=${1:-____}
+  __CREATE=${2:-}
+
+  if _git_local_branch_available "${__BRANCH}"
+  then
+    # checkout the local branch which will already be tracking remote
+    _OUT=$(git checkout "${__BRANCH}")
 
     if [ ${?} -ne 0 ]
     then
       _RET=1
       _error "Unable to checkout ${__BRANCH}. ${_OUT}"
     fi
+  elif _git_remote_branch_available "${__BRANCH}"
+  then
+    _info "Local branch not available, establishing and tracking remote."
+    # checkout the remote branch with tracking implicit
+    _OUT=$(git checkout --track -b "${__BRANCH}" origin/${__BRANCH})
+
+    if [ ${?} -ne 0 ]
+    then
+      _RET=1
+      _error "Unable to checkout ${__BRANCH}. ${_OUT}"
+    fi
+  elif [ "${__CREATE}" == "1" ]
+  then
+    _info "Branch not available, creating: ${__BRANCH}"
+    _OUT=$(git checkout -b "${__BRANCH}")
   else
     _RET=1
     _error "Configuration branch ${__BRANCH} is not available. ${_OUT}"
@@ -244,6 +255,7 @@ function reset_config_variables {
   KP_NAME=
   KP_VERSION=
   KP_URL=
+  KP_BRANCH=
   KP_UPSTREAM_SRC_TYPE=
   KP_UPSTREAM_SRC_GIT_URL=
   KP_UPSTREAM_SRC_GIT_COMMIT=
@@ -469,6 +481,7 @@ function get_sync_status {
 
   KP_PACKAGE_SYNC_STATE="-"
   KP_UPSTREAM_SYNC_STATE=" "
+  KP_BRANCH="unknown"
 
   if [ -z ${KP_NAME} ]
   then
@@ -485,6 +498,7 @@ function get_sync_status {
 
   _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}"
 
+  KP_BRANCH=$(_git_branch_active)
   KP_PACKAGE_SYNC_STATE="M"
 
   # commit/sync check
