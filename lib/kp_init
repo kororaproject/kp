@@ -166,6 +166,13 @@ function main {
       exit 1
     fi
 
+    _pushd "${WORKING_DIR}/conf"
+
+    git config user.name "${KP_DEV_ACCOUNT}"
+    git config user.email "${KP_DEV_EMAIL}"
+
+    _popd
+
     _info "${_DISK_USAGE}B used - ${_DISK_AVAILABLE}B remaining"
   else
     _error "Directory is not writable."
