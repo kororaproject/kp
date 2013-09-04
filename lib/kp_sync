@@ -148,6 +148,10 @@ function main {
   list_config_validate "${PACKAGES}"
   if [ ${?} -gt 0 ]
   then
+    CURRENT_BRANCH=
+
+    # flag for new branches (ie local only)
+    BRANCH_LOCAL_ONLY=
 
     # check that we have packages to sync
     if [ -z "$(ls -A ${WORKING_PACKSES_DIR})" ]
@@ -168,9 +172,38 @@ function main {
         git reset --hard
       fi
 
-      # we should always attempt a remote pull (with rebase) on our configuration
-      # it's the only way to manage upstream sync
-      git pull --rebase || exit 1
+      _debug "Fetching configuration information ..."
+      git fetch --all || exit 1
+
+      CURRENT_BRANCH=$(_git_branch_active)
+
+      # check if our current branch is available remotely
+      _git_remote_branch_available "${CURRENT_BRANCH}"
+      if [ ${?} -eq 0 ]
+      then
+
+        # we should always attempt a remote pull (with rebase) on our configuration
+        # it's the only way to manage upstream sync
+        _debug "Rebasing configuration information ..."
+        git pull --rebase origin "${CURRENT_BRANCH}" || exit 1
+
+      # otherwise, we're a new branch
+      else
+        BRANCH_LOCAL_ONLY=1
+
+        if [ "${OPT_NO_PUSH}" != "1" ]
+        then
+          _info "Pushing new local configuration branch: ${CURRENT_BRANCH}"
+
+          git push origin "${CURRENT_BRANCH}"
+          if [ ${?} -ne 0 ]
+          then
+            _error "Unable to push new local configuration branch."
+            return 1
+          fi
+
+        fi
+      fi
 
       # we have no reason to push local changes at this point
       # as we shouldn't be locally modifying the configuration
@@ -210,79 +243,87 @@ function main {
       # check package version with spec
       get_spec_version "build/${KP_BUILD_SPEC}"
 
-      _R_VER="${KP_VERSION}-${KP_RELEASE}"
-      _L_VER="${_SPEC_VERSION}-${_SPEC_RELEASE}"
+      # calculate the local/remote heads
+      _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1)
+      _REMOTE_HEAD=
+      _DELTA_COUNT=0
 
-      # calculate the version mismatch
-      _MASTER="L"
-      [ "${_R_VER}" \> "${_L_VER}" ] && _MASTER="R"
-      [ "${_R_VER}" == "${_L_VER}" ] && _MASTER="-"
+      _HAVE_DELTA=
+      [ "${KP_RELEASE_GIT_COMMIT}" != "${_LOCAL_HEAD}" ] && _HAVE_DELTA=1
 
-      _info "M: ${_MASTER} (L:${_L_VER} R:${_R_VER})"
-
-      # calculate the local/heads head
-      _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1 master)
-      _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/master)
-
-      # remote and local differ so let's fetch and assess
-      if [ "${_MASTER}" != "-" -o "${_LOCAL_HEAD}" != "${_REMOTE_HEAD}" -o "${OPT_FORCE_REMOTE_FETCH}" == "1" ]
+      # check if our current branch is available remotely
+      _BRANCH_LOCAL_ONLY=
+      _git_remote_branch_available "${CURRENT_BRANCH}"
+      if [ ${?} -eq 0 ]
       then
-        _info "Updating ..."
+        _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/${CURRENT_BRANCH})
 
-        git remote update >/dev/null 2>&1
+        # calculate commit delta count
+        _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH})
 
-        # calculate the remote head
-        _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/master)
+        _info " L: ${_LOCAL_HEAD}\n R: ${_REMOTE_HEAD}\n C: ${KP_RELEASE_GIT_COMMIT}\n D: ${_DELTA_COUNT}"
 
-        _RL_COMMIT_LOC=$(($(git log --pretty=format:'%H' origin/master | grep -n ${_LOCAL_HEAD} | cut -d: -f1)-1))
-        _LR_COMMIT_LOC=$(($(git log --pretty=format:'%H' master | grep -n ${_REMOTE_HEAD} | cut -d: -f1)-1))
-
-        [ ${_LR_COMMIT_LOC} -le 0 ] && _LR_DELTA=0 || _LR_DELTA="+${_LR_COMMIT_LOC}"
-        [ ${_RL_COMMIT_LOC} -le 0 ] && _RL_DELTA=0 || _RL_DELTA="+${_RL_COMMIT_LOC}"
-
-        _info " - L:${_LOCAL_HEAD} (${_LR_DELTA}-${_RL_DELTA}) R:${_REMOTE_HEAD}"
-
-        if [ ${_RL_DELTA} -gt 0 ]
+        # remote and local differ so let's fetch and assess
+        if [[ "${_HAVE_DELTA}" == "1" || "${_LOCAL_HEAD}" != "${_REMOTE_HEAD}" || "${OPT_FORCE_REMOTE_FETCH}" == "1" ]]
         then
-          if [[ -z "${OPT_NO_PULL}" || ${OPT_NO_PULL} -eq 1 ]]
+          _debug "Fetching upstream package ref(s) ..."
+          git fetch || exit 1
+
+          # re-calculate the remote head
+
+          # re-calculate commit delta count
+          _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH})
+
+          if [[ "${OPT_NO_PULL}" != "1" ]]
           then
-            _info "Pulling upstream changes ..."
-            git pull --rebase || exit 1
+            if [[ ${_DELTA_COUNT} -gt 0 ]]
+            then
+              _info "Pulling upstream changes ..."
+              git pull --rebase origin "${CURRENT_BRANCH}" || exit 1
+
+              # re-calculate commits delta count
+              _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH})
+            else
+              _info "Nothing new to pull."
+            fi
           else
-            _info "Not pulling upstream changes ..."
+            _info "Not pulling upstream changes, as reuested."
           fi
+
+          # recalculate heads
+          _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1)
+          _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/${CURRENT_BRANCH})
+          _HAVE_DELTA=
+          [ "${KP_RELEASE_GIT_COMMIT}" != "${_LOCAL_HEAD}" ] && _HAVE_DELTA=1
+
+          _info " L: ${_LOCAL_HEAD}\n R: ${_REMOTE_HEAD}\n C: ${KP_RELEASE_GIT_COMMIT}\n D: ${_DELTA_COUNT}"
         fi
-
-        if [ ${_LR_DELTA} -gt 0 ]
-        then
-          if [[ -z "${OPT_NO_PULL}" || ${OPT_NO_PULL} -eq 1 ]]
-          then
-            _info "Pushing local changes upstream ..."
-            git push --all origin || exit 1
-          else
-            _info "Not pushing local changes upstream ..."
-          fi
-        fi
-
-        # recalculate local head
-        _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1 master)
-
-        # recalculate version matches
-        _R_VER="${KP_VERSION}-${KP_RELEASE}"
-
-        _MASTER="L"
-        [ "${_R_VER}" \> "${_L_VER}" ] && _MASTER="R"
-        [ "${_R_VER}" == "${_L_VER}" ] && _MASTER="-"
+      else
+        _BRANCH_LOCAL_ONLY=1
+        _info " L: ${_LOCAL_HEAD}\n R: not available\n C: ${KP_RELEASE_GIT_COMMIT}\n D: ${_DELTA_COUNT}"
       fi
 
-      # local is ahead so update the configuration information
-      if [ "${_MASTER}" == "L" ] || [ "${_MASTER}" != "-" -a "${OPT_FORCE_LOCAL_VERSION}" == "1" ]
+      if [[ "${OPT_NO_PUSH}" != "1" ]]
+      then
+        if [[ ${_DELTA_COUNT} -gt 0 || "${_BRANCH_LOCAL_ONLY}" == "1" ]]
+        then
+          _info "Pushing local changes upstream ..."
+          git push --all origin || exit 1
+        else
+          _info "Nothing new to push."
+        fi
+      else
+        _info "Not pushing local changes upstream, as requested."
+      fi
+
+      # we have a head so update the configuration information
+      if [[ "${_HAVE_DELTA}" == "1" || "${OPT_FORCE_LOCAL_VERSION}" == "1" ]]
       then
         _VERBOSE_FORCE=
         [ "${OPT_FORCE_LOCAL_VERSION}" == "1" ] && _VERBOSE_FORCE=" (forced)"
         _info "Updating upstream configuration information${_VERBOSE_FORCE} ..."
 
-        _pushd "${WORKING_DIR}/conf/"
+        _pushd "${WORKING_DIR}/conf"
 
         sed -i -e "s/^KP_VERSION=.*/KP_VERSION=${_SPEC_VERSION}/" \
                -e "s/^KP_RELEASE=.*/KP_RELEASE=${_SPEC_RELEASE}/" \
@@ -291,7 +332,9 @@ function main {
 
         git add "packages.d/${F}"
         git commit -m "updated: version bump for ${KP_NAME} ${_VERBOSE_FORCE}"
-        git push --all origin
+
+        # push the configuration changes
+        git push origin "${CURRENT_BRANCH}"
 
         _popd
       fi
