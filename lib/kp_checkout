@@ -158,12 +158,20 @@ function _package_checkout {
     # update tree, fetching all branches and tags
     _debug "Cloning from: ${KP_URL}"
 
-    _OUT=$(git clone ${KP_URL} ${_WORKING_PATH})
+    _OUT=$(git clone "${KP_URL}" "${_WORKING_PATH}")
     if [ ${?} -ne 0 ]
     then
       _error "Unable to clone package."
       return 1
     fi
+
+    # set
+    _pushd "${_WORKING_PATH}"
+
+    git config user.name "${KP_DEV_ACCOUNT}"
+    git config user.email "${KP_DEV_EMAIL}"
+
+    _popd
   fi
 
   _pushd "${_WORKING_PATH}"
