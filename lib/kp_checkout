@@ -23,6 +23,7 @@ OPT_VERBOSE=
 OPT_CHECKOUT_ONLY=
 OPT_RELEASE=
 OPT_NO_UPSTREAM=
+OPT_CREATE_BRANCH=
 
 
 #
@@ -53,7 +54,7 @@ function _checkout_configuration_branch {
   then
     _info "Configuration is currently set for: ${_BRANCH_CURRENT}"
 
-    _git_branch_switch "${_BRANCH}"
+    _git_branch_switch "${_BRANCH}" "${OPT_CREATE_BRANCH}"
     _RET=$?
   fi
 
@@ -93,12 +94,17 @@ function _package_upstream_checkout {
     if [ ! -d "${UPSTREAM_DIR}/.git" ]
     then
       # update tree, fetching all branches and tags
-      _debug "Cloning upstream : ${KP_UPSTREAM_SRC_URL}"
-      _OUT=$(git clone ${KP_UPSTREAM_SRC_URL} ${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream)
+      _debug "Cloning upstream: ${KP_UPSTREAM_SRC_URL}"
+
+      _OUT=$(git clone "${KP_UPSTREAM_SRC_URL}" "${WORKING_PACKAGES_DIR}/${KP_NAME}/upstream")
       if [ ${?} -ne 0 ]
       then
-        _debug "${_OUT}"
+        _error "${_OUT}"
       fi
+
+    # we already exist
+    else
+      true
     fi
 
     _warn "TODO: implement git sync check"
@@ -163,8 +169,7 @@ function _package_checkout {
   _pushd "${_WORKING_PATH}"
 
   # switch to our requested branch
-  _git_branch_switch "${OPT_RELEASE}"
-
+  _git_branch_switch "${OPT_RELEASE}" "${OPT_CREATE_BRANCH}"
   if [ ${?} -ne 0 ]
   then
     _error "Unable to switch branch."
@@ -199,6 +204,7 @@ function usage {
     -V          Show version
 
   Long Options:
+    --create       Create release branch if not existing
     --no-upstream  Same as -n
     --release      Same as -r
     --verbose      Same as -v
@@ -215,7 +221,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="no-upstream release: verbose version help" "n r: v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="create no-upstream release: verbose version help" "n r: v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -223,6 +229,9 @@ function parse_args {
   while [ $# -gt 0 ]
   do
     case "$1" in
+      --create)
+        OPT_CREATE_BRANCH=1
+        ;;
       -n|--no-upstream)
         OPT_NO_UPSTREAM=1
         ;;
@@ -281,6 +290,10 @@ function main {
   _info "Checking out Korora release ${OPT_RELEASE}"
 
   _checkout_configuration_branch "${OPT_RELEASE}"
+  if [ ${?} -ne 0 ]
+  then
+    exit 1
+  fi
 
   list_config_validate "${PACKAGES}"
   if [ ${?} -gt 0 ]
