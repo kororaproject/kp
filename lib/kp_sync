@@ -259,7 +259,7 @@ function main {
         _REMOTE_HEAD=$(git log --pretty=format:'%H' -n 1 origin/${CURRENT_BRANCH})
 
         # calculate commit delta count
-        _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH})
+        _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH} --count)
 
         _info " L: ${_LOCAL_HEAD}\n R: ${_REMOTE_HEAD}\n C: ${KP_RELEASE_GIT_COMMIT}\n D: ${_DELTA_COUNT}"
 
@@ -272,7 +272,7 @@ function main {
           # re-calculate the remote head
 
           # re-calculate commit delta count
-          _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH})
+          _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH} --count)
 
           if [[ "${OPT_NO_PULL}" != "1" ]]
           then
@@ -282,7 +282,7 @@ function main {
               git pull --rebase origin "${CURRENT_BRANCH}" || exit 1
 
               # re-calculate commits delta count
-              _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH})
+              _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH} --count)
             else
               _info "Nothing new to pull."
             fi
