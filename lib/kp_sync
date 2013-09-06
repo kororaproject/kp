@@ -176,6 +176,7 @@ function main {
       git fetch --all || exit 1
 
       CURRENT_BRANCH=$(_git_branch_active)
+      _DELTA_COUNT=0
 
       # check if our current branch is available remotely
       _git_remote_branch_available "${CURRENT_BRANCH}"
@@ -187,11 +188,16 @@ function main {
         _debug "Rebasing configuration information ..."
         git pull --rebase origin "${CURRENT_BRANCH}" || exit 1
 
+        _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH} --count)
+
       # otherwise, we're a new branch
       else
         BRANCH_LOCAL_ONLY=1
+      fi
 
-        if [ "${OPT_NO_PUSH}" != "1" ]
+      if [ "${OPT_NO_PUSH}" != "1" ]
+      then
+        if [[ ${_DELTA_COUNT} -gt 0 || "${_BRANCH_LOCAL_ONLY}" == "1" ]]
         then
           _info "Pushing new local configuration branch: ${CURRENT_BRANCH}"
 
@@ -203,6 +209,8 @@ function main {
           fi
 
         fi
+      else
+        _info "Not pushing configuration changes upstream. To push add --push."
       fi
 
       # we have no reason to push local changes at this point
@@ -274,9 +282,9 @@ function main {
           # re-calculate commit delta count
           _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH} --count)
 
-          if [[ "${OPT_NO_PULL}" != "1" ]]
+          if [[ ${_DELTA_COUNT} -gt 0 ]]
           then
-            if [[ ${_DELTA_COUNT} -gt 0 ]]
+            if [[ "${OPT_NO_PULL}" != "1" ]]
             then
               _info "Pulling upstream changes ..."
               git pull --rebase origin "${CURRENT_BRANCH}" || exit 1
@@ -284,10 +292,10 @@ function main {
               # re-calculate commits delta count
               _DELTA_COUNT=$(git rev-list HEAD...origin/${CURRENT_BRANCH} --count)
             else
-              _info "Nothing new to pull."
+              _info "Not pulling upstream changes. To pull add --pull."
             fi
           else
-            _info "Not pulling upstream changes, as reuested."
+            _info "Nothing new to pull."
           fi
 
           # recalculate heads
@@ -303,17 +311,17 @@ function main {
         _info " L: ${_LOCAL_HEAD}\n R: not available\n C: ${KP_RELEASE_GIT_COMMIT}\n D: ${_DELTA_COUNT}"
       fi
 
-      if [[ "${OPT_NO_PUSH}" != "1" ]]
+      if [[ ${_DELTA_COUNT} -gt 0 || "${_BRANCH_LOCAL_ONLY}" == "1" ]]
       then
-        if [[ ${_DELTA_COUNT} -gt 0 || "${_BRANCH_LOCAL_ONLY}" == "1" ]]
+        if [[ "${OPT_NO_PUSH}" != "1" ]]
         then
           _info "Pushing local changes upstream ..."
           git push --all origin || exit 1
         else
-          _info "Nothing new to push."
+          _info "Not pushing local changes upstream. To push add --push."
         fi
       else
-        _info "Not pushing local changes upstream, as requested."
+        _info "Nothing new to push."
       fi
 
       # we have a head so update the configuration information
