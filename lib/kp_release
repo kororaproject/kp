@@ -48,7 +48,7 @@ function _template_inflate {
          -e "s@%%KP_VERSION%%@${OPT_RELEASE_VERSION}@g" ${_DST_FILE}
 
   # check for includes in our template
-  grep "%include" ${_DST_FILE} | while read I F
+  grep "^%include" ${_DST_FILE} | while read I F
   do
     _FI="/tmp/$(basename ${F}).${RANDOM}"
 
