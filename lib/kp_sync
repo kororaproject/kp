@@ -316,7 +316,7 @@ function main {
         if [[ "${OPT_NO_PUSH}" != "1" ]]
         then
           _info "Pushing local changes upstream ..."
-          git push --all origin || exit 1
+          git push origin "${CURRENT_BRANCH}" || exit 1
         else
           _info "Not pushing local changes upstream. To push add --push."
         fi
