@@ -20,6 +20,7 @@
 # INTIALISE
 #
 OPT_KEEP=
+OPT_RELEASE=20
 
 
 #
@@ -116,11 +117,11 @@ function main {
     #mkdir -p tmp-${DATE}/$x/{stable,testing}
     #cd tmp-${DATE}/$x/stable
 
-    F_URL=$(yumdownloader --urls --source --disablerepo=korora $x | grep "rpm$")
+    F_URL=$(yumdownloader --urls --releasever ${OPT_RELEASE} --source --disablerepo=korora $x | grep "rpm$")
     F_FILE=${F_URL##*/}
     F_VERSION=$(echo ${F_FILE} | awk -F"$x-" '{ print $2 }' | sed -re 's/\.fc[0-9]+//' -e 's/\.src\.rpm//')
 
-    FT_URL=$(yumdownloader --urls --source --enablerepo=updates-testing --disablerepo=korora $x | grep "rpm$")
+    FT_URL=$(yumdownloader --urls --releasever ${OPT_RELEASE} --source --enablerepo=updates-testing --disablerepo=korora $x | grep "rpm$")
     FT_FILE=${FT_URL##*/}
     FT_VERSION=$(echo ${FT_FILE} | awk -F"$x-" '{ print $2 }' | sed -re 's/\.fc[0-9]+//' -e 's/\.src\.rpm//')
 
