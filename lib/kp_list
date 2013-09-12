@@ -126,8 +126,11 @@ function main {
   list_config_validate "${PACKAGES}"
   if [ ${?} -gt 0 ]
   then
+    _pushd "${WORKING_CONFIG_DIR}"
     _CURRENT_BRANCH=$(_git_branch_active)
-    _info "Active Branch: ${_CURRENT_BRANCH}"
+    _popd
+
+    _info "Active configuration branch: ${_CURRENT_BRANCH}"
 
     echo
 
