@@ -81,6 +81,7 @@ done
 #
 
 [ -z ${LIB_DIR} ]     && LIB_DIR="/usr/share/lib/kp/lib"
+[ -z ${CONF_DIR} ]    && LIB_DIR="/usr/share/lib/kp/conf"
 [ -z ${WORKING_DIR} ] && WORKING_DIR="/var/lib/kp"
 [ -z ${RELEASE_DIR} ] && RELEASE_DIR="/tmp"
 [ -z ${LOG_DIR} ]     && LOG_DIR="/usr/share/lib/kp/log"

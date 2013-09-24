@@ -17,8 +17,8 @@ GIT_URL_SSH="git@github.com:${REPO_USER}"
 
 # Temporary location for building packages
 TMP_DIR=/var/lib/kp
+CONF_DIR="/var/lib/kp/conf"
 #WORKING_DIR="/var/cache/kp"
-#CONFIG_DIR="/var/cache/kp/conf"
 #LIB_DIR="./lib"
 
 # Enable debug
