@@ -25,6 +25,7 @@ OPT_ISO=1
 OPT_CACHE_ONLY=
 
 OPT_RELEASE_VERSION=19
+OPT_RELEASE_MINOR_VERSION=
 OPT_RELEASE_CODENAME="Bruce"
 OPT_RELEASE_BASEARCH="x86_64"
 OPT_RELEASE_TITLE="Korora"
@@ -75,6 +76,7 @@ Usage: $0 release [options] [release ... releaseN]
 Options:
   -t   Set the release title
   -r   Set the release version
+  -m   Set the minor release version
   -n   Set the release codename
   -a   Set the release architecture
   -C   Use cached packages only
@@ -102,7 +104,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="release-title: release-version: release-codename: release-arch: desktop: verbose cache-only version help" "t: r: n: a: d: C l v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="release-title: release-version: minor-version: release-codename: release-arch: desktop: verbose cache-only version help" "t: r: m: n: a: d: C l v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -117,6 +119,10 @@ function parse_args {
         ;;
       -r|--release-version)
         OPT_RELEASE_VERSION="$2"
+        shift
+        ;;
+      -m|--minor-version)
+        OPT_RELEASE_MINOR_VERSION="$2"
         shift
         ;;
       -n|--release-codename)
@@ -204,7 +210,7 @@ function main {
       _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
       _info "  - Desktop:      ${OPT_RELEASE_DESKTOP}"
 
-      _FILE="korora-${OPT_RELEASE_VERSION}-${OPT_RELEASE_BASEARCH}-${R}-live"
+      _FILE="korora-${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}-${OPT_RELEASE_BASEARCH}-${R}-live"
 
       # create working directory
       _TEMPLATE="/tmp/${R}.ks.${RANDOM}"
@@ -221,7 +227,7 @@ function main {
 
       # create the CD
       _info "Creating release ..."
-      setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}" --product="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION} ${OPT_RELEASE_BASEARCH} ${OPT_RELEASE_DESKTOP}" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
+      setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}" --product="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION} ${OPT_RELEASE_BASEARCH} ${OPT_RELEASE_DESKTOP}" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
 
       # livemedia-creator --make-iso --ks="${_TEMPLATE_FLATTENED}" --image-name="${_FILE}" --title="Korora ${OPT_RELEASE_VERSION}" --project="Korora ${OPT_RELEASE_VERSION} (${OPT_RELEASE_CODENAME})" --releasever="${OPT_RELEASE_VERSION}" --arch="${OPT_RELEASE_BASEARCH}" --tmp="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}" --no-virt
 
