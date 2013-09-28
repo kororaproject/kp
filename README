@@ -1,4 +1,3 @@
-
 Korora Package (KP)
 
 A Korora package can be considered a high level package that often (but not
@@ -117,7 +116,7 @@ To checkout all or a specific [package], issue
 Examples:
     ./kp checkout handbrake # pulls handbrake tool from repos
     ./kp checkout jockey # drivers support from ubuntu's stable
-    ./kp checkout  # get the full kaboodle
+    ./kp checkout -r master (or version) # get the full kaboodle
 
 Note that the build operation fetches information from online repositories and
 therefore requires a working internet connection.  If all this went smoothly,
