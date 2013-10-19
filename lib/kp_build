@@ -29,6 +29,7 @@ OPT_INCLUDE_DEPRACATED=
 OPT_DIST=$(_machine_dist)
 OPT_RELEASEVER=$(_machine_releasever)
 OPT_BASEARCH=$(_machine_basearch)
+OPT_TYPE=release
 MOCK_OPTS=
 
 #
@@ -285,6 +286,7 @@ Options:
   -a   Set base architecture
   -d   Set distribution
   -r   Set release version
+  -t   Package is for testing repository
   -x   Initialise mock to a clean state before building all packages
   -X   Initialise mock to a clean state before building each package
   -v   Show verbose output
@@ -295,6 +297,7 @@ Long Options:
   --arch                  Same as -a
   --distribution          Same as -d
   --releasever            Same as -r
+  --testing               Same as -t
   --clean                 Same as -x
   --clean-each-package    Same as -X
   --no-sign               Don't sign package once it's built
@@ -314,7 +317,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: clean clean-each-package no-sign pause-on-error include-depracated verbose version help" "a: d: r: x X v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="arch: distribution: releasever: testing clean clean-each-package no-sign pause-on-error include-depracated verbose version help" "a: d: r: t x X v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -328,6 +331,10 @@ function parse_args {
         ;;
       -d|--distribition)
         OPT_DIST=$2
+        shift
+        ;;
+      -t|--testing)
+        OPT_TYPE=testing
         shift
         ;;
       -r|--releasever)
@@ -416,8 +423,8 @@ function main {
       initialise_mock
     fi
 
-    _REPO_SOURCE_DIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/source"
-    _REPO_ARCH_DIR="${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/${OPT_BASEARCH}"
+    _REPO_SOURCE_DIR="${WORKING_REPOSITORY_DIR}/${OPT_TYPE}/${OPT_RELEASEVER}/source"
+    _REPO_ARCH_DIR="${WORKING_REPOSITORY_DIR}/${OPT_TYPE}/${OPT_RELEASEVER}/${OPT_BASEARCH}"
 
     _debug "Copying source packages to: ${_REPO_SOURCE_DIR}"
     _debug "Copying arch packages to: ${_REPO_ARCH_DIR}"
