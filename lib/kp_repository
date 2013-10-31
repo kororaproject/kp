@@ -26,7 +26,7 @@ OPT_NO_SIGN=
 OPT_DIST=$(_machine_dist)
 OPT_RELEASEVER=$(_machine_releasever)
 OPT_BASEARCH=$(_machine_basearch)
-OPT_TYPE=release
+OPT_TYPE=releases
 
 #
 # PRIVATE FUNCTIONS
@@ -229,7 +229,7 @@ function main {
       [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="--quiet" || _VERBOSE="-v"
 
       _info "  - using key ${KEY_ID[${OPT_RELEASEVER}]}"
-      rpmsign --quiet --key-id=${KEY_ID[${OPT_RELEASEVER}]} --addsign ${WORKING_REPOSITORY_DIR}/${OPT_RELEASEVER}/*/*.rpm >/dev/null 2>&1
+      rpmsign --quiet --key-id=${KEY_ID[${OPT_RELEASEVER}]} --addsign ${WORKING_REPOSITORY_DIR}/${OPT_TYPE}/${OPT_RELEASEVER}/*/*.rpm >/dev/null 2>&1
 
       if [ $? -ne 0 ]
       then
