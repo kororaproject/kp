@@ -106,10 +106,10 @@ function main {
     x=${KP_NAME}
     if [ ${KP_NAME} == "korora-backgrounds" ]
     then
-      x="schroedinger-cat-backgrounds"
+      x="heisenbug-backgrounds"
     elif [ ${KP_NAME} == "korora-release" ]
     then
-      x="generic-release"
+      x="fedora-release"
     fi
 
     _info "${KP_NAME}"
@@ -121,7 +121,7 @@ function main {
     F_FILE=${F_URL##*/}
     F_VERSION=$(echo ${F_FILE} | awk -F"$x-" '{ print $2 }' | sed -re 's/\.fc[0-9]+//' -e 's/\.src\.rpm//')
 
-    FT_URL=$(yumdownloader --urls --releasever ${OPT_RELEASE} --source --enablerepo=updates-testing --disablerepo=korora $x | grep "rpm$")
+    FT_URL=$(yumdownloader --urls --releasever ${OPT_RELEASE} --source --enablerepo=updates-testing --disablerepo=korora --disablerepo=korora-testing $x | grep "rpm$")
     FT_FILE=${FT_URL##*/}
     FT_VERSION=$(echo ${FT_FILE} | awk -F"$x-" '{ print $2 }' | sed -re 's/\.fc[0-9]+//' -e 's/\.src\.rpm//')
 
