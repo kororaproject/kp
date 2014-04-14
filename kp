@@ -190,30 +190,9 @@ then
 fi
 
 #
-# DEPENDANCY CHECKS
+# GLOBAL DEPENDANCY CHECKS
 #
 
-_MOCK_VERSION=$(mock --version 2>/dev/null)
-if [ ${?} -ne 0 ]
-then
-  _error "Can't find mock. Is it installed?"
-  exit 1
-fi
-
-_MOCK_GROUPS=$(getent group mock | grep $(id -ng))
-if [ ${?} -ne 0 ]
-then
-  _error "Current user is not part of the mock group."
-  exit 1
-fi
-
-
-_SPECTOOL_VERSIOIN=$(spectool --version 2>/dev/null)
-if [ ${?} -ne 0 ]
-then
-  _error "Can't find spectool. Is it installed?"
-#  exit 1
-fi
 
 #
 # MAIN

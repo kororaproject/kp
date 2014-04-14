@@ -404,6 +404,28 @@ function parse_args {
 #
 
 function main {
+  # local dependency checks
+  _SPECTOOL_VERSION=$(spectool --version 2>/dev/null)
+  if [ ${?} -ne 0 ]
+  then
+    _error "Can't find spectool. Is it installed?\nTry dnf install spectool"
+    exit 1
+  fi
+
+  _MOCK_VERSION=$(mock --version 2>/dev/null)
+  if [ ${?} -ne 0 ]
+  then
+    _error "Can't find mock. Is it installed?\nTry dnf install mock"
+    exit 1
+  fi
+
+  _MOCK_GROUPS=$(getent group mock | grep $(id -ng))
+  if [ ${?} -ne 0 ]
+  then
+    _error "Current user is not part of the mock group."
+    exit 1
+  fi
+
   list_config_validate "${PACKAGES}"
   if [ ${?} -gt 0 ]
   then

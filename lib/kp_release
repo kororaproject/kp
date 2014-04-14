@@ -182,6 +182,14 @@ function parse_args {
 #
 
 function main {
+  # local dependency checks
+  _LIVECD_TOOLS=$(livecd-creator --help 2>/dev/null)
+  if [ ${?} -ne 0 ]
+  then
+    _error "Can't find livecd-creator. Is it installed?\nTry dnf install livecd-tools"
+    exit 1
+  fi
+
   # must be root to run
   if [ "$(id -u)" -ne 0 ]
   then
