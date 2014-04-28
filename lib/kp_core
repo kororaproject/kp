@@ -45,11 +45,12 @@ function _machine_basearch {
 
 
 function _machine_releasever {
-  echo $(lsb_release -r | awk '{print $2}')
+  echo $( . /etc/os-release 2>/dev/null && echo $VERSION_ID || echo "0" )
 }
 
 function _machine_dist {
-  case $(lsb_release -i | awk '{print $3}') in
+  _NAME=$( . /etc/os-release 2>/dev/null && echo $NAME )
+  case $_NAME in
     Fedora|fedora)
       echo "fedora"
       ;;
