@@ -30,6 +30,7 @@ OPT_DIST=$(_machine_dist)
 OPT_RELEASEVER=$(_machine_releasever)
 OPT_BASEARCH=$(_machine_basearch)
 OPT_TYPE=releases
+MOCK_BIN=/usr/bin/mock
 MOCK_OPTS=
 
 #
@@ -65,8 +66,8 @@ function _check_upstream {
 
 function _initialise_mock {
   _debug "Initialising mock build environment.."
-  mock ${MOCK_OPTS} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --clean
-  mock ${MOCK_OPTS} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --init
+  ${MOCK_BIN} ${MOCK_OPTS} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --clean
+  ${MOCK_BIN} ${MOCK_OPTS} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --init
   _MOCK_CLEAN=1
 }
 
@@ -232,7 +233,7 @@ function _mock_build {
   [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
 
   _debug "Building source package, please wait ..."
-  mock ${MOCK_OPTS} ${_VERBOSE} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --buildsrpm --spec "${_BUILD_SPEC}" --sources sources/
+  ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --buildsrpm --spec "${_BUILD_SPEC}" --sources sources/
   _MOCK_RET=${?}
 
   _MOCK_CLEAN=
@@ -245,7 +246,7 @@ function _mock_build {
 
   _debug "Building package, please wait ..."
   # --no-clean because we have srpm in there, else need to copy out (and build should be clean anyway)
-  mock ${MOCK_OPTS} ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $(grep ^Wrote: /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |grep src.rpm |awk {'print $2'} |uniq))
+  ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $(grep ^Wrote: /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |grep src.rpm |awk {'print $2'} |uniq))
   _MOCK_RET=${?}
 
   _popd
