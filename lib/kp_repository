@@ -187,6 +187,13 @@ function parse_args {
 #
 
 function main {
+  _CREATEREPO_VERSION=$(createrepo --version 2>/dev/null)
+  if [ ${?} -ne 0 ]
+  then
+    _error "Can't find createrepo. Is it installed?\nTry dnf install createrepo"
+    exit 1
+  fi
+
   _info "Updating repository for ${OPT_DIST} ${OPT_TYPE} ${OPT_RELEASEVER} (${OPT_BASEARCH})"
 
   _REPO_SOURCE_DIR="${WORKING_REPOSITORY_DIR}/${OPT_TYPE}/${OPT_RELEASEVER}/source"

@@ -406,6 +406,13 @@ function parse_args {
 
 function main {
   # local dependency checks
+  _CREATEREPO_VERSION=$(createrepo --version 2>/dev/null)
+  if [ ${?} -ne 0 ]
+  then
+    _error "Can't find createrepo. Is it installed?\nTry dnf install createrepo"
+    exit 1
+  fi
+
   _SPECTOOL_VERSION=$(spectool --version 2>/dev/null)
   if [ ${?} -ne 0 ]
   then
