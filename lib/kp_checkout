@@ -300,6 +300,8 @@ function main {
   _checkout_configuration_branch "${OPT_RELEASE}"
   if [ ${?} -ne 0 ]
   then
+    _error "Failed to checkout configuration branch ${OPT_RELEASE}, aborting."
+    _error "If the branch exists remotely, try '$0 sync --fetch-only' then re-run this checkout, else add '--create' to make this branch."
     exit 1
   fi
 
@@ -316,7 +318,13 @@ function main {
       echo "Checking out: ${KP_NAME}"
 
       # grab the korora package
-      _package_checkout || continue
+      _package_checkout
+      if [ ${?} -ne 0 ]
+      then
+        _error "Failed to checkout ${KP_NAME} on branch ${OPT_RELEASE}, aborting."
+        _error "If the branch exists remotely, try '$0 sync --fetch-only' then re-run this checkout, else add '--create' to make this branch."
+        exit 1
+      fi
 
       # grab the relevant upstream source
       if [ "${OPT_NO_UPSTREAM}" != "1" ]
