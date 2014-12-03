@@ -337,7 +337,7 @@ function main {
         fi
 
         # we have a head so update the configuration information
-        if [[ "${_HAVE_DELTA}" == "1" || "${OPT_FORCE_LOCAL_VERSION}" == "1" ]]
+        if [[ "${_HAVE_DELTA}" == "1" || "${OPT_FORCE_LOCAL_VERSION}" == "1" && "${KP_UPSTREAM_SRC_TYPE}" != "srpm" ]]
         then
           _VERBOSE_FORCE=
           [ "${OPT_FORCE_LOCAL_VERSION}" == "1" ] && _VERBOSE_FORCE=" (forced)"
