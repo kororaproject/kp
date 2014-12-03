@@ -103,7 +103,9 @@ function _generate_spec {
   fi
 
   # calculate the working version and release now that the spec has been generated
-  get_spec_version "${_BUILD_SPEC}" || exit 1
+  if [[ "${KP_UPSTREAM_SRC_TYPE}" != "srpm" ]]; then
+    get_spec_version "${_BUILD_SPEC}" || exit 1
+  fi
 
   _popd
 }
@@ -125,7 +127,7 @@ function _gather_source {
       if [ ! -r "${_SRPM}" ]
       then
         _info "Downloading SRPM: ${_SRPM} ..."
-        wget "$KP_UPSTREAM_SRC_URL" -O "${_SRPM}"
+        wget -c "$KP_UPSTREAM_SRC_URL" -O "${_SRPM}"
       fi
 
       # assume downloading sources is already done and not required
@@ -143,11 +145,12 @@ function _gather_source {
       # check if we missed a file
       if [ ${_COMPLETE} -eq 0 ]
       then
-        _info "Extracting SRPM source(s) ..."
-
-        rpm2cpio ${_SRPM} | cpio -i --quiet -f "*.spec" || _RET=1
+        _info "Using source RPM ..."
+#        we're not extracting srpms now, just build directly from srpm
+#        rpm2cpio ${_SRPM} | cpio -i --quiet -f "*.spec" || _RET=1
       else
-        _info "Using cached version(s) of source(s)."
+        _error "Failed to get full source RPM."
+        _RET=1
       fi
 
       _popd
@@ -233,7 +236,9 @@ function _mock_build {
   [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
 
   _debug "Building source package, please wait ..."
-  ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --buildsrpm --spec "${_BUILD_SPEC}" --sources sources/
+  if [[ "${KP_UPSTREAM_SRC_TYPE}" != "srpm" ]]; then
+    ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --buildsrpm --spec "${_BUILD_SPEC}" --sources sources/
+  fi
   _MOCK_RET=${?}
 
   _MOCK_CLEAN=
@@ -246,7 +251,11 @@ function _mock_build {
 
   _debug "Building package, please wait ..."
   # --no-clean because we have srpm in there, else need to copy out (and build should be clean anyway)
-  ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $(grep ^Wrote: /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |grep src.rpm |awk {'print $2'} |uniq))
+  if [[ "${KP_UPSTREAM_SRC_TYPE}" == "srpm" ]]; then
+    ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild "sources/${_SRPM}"
+  else
+    ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $(grep ^Wrote: /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |grep src.rpm |awk {'print $2'} |uniq))
+  fi
   _MOCK_RET=${?}
 
   _popd
