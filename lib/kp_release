@@ -79,6 +79,7 @@ Options:
   -m   Set the minor release version
   -n   Set the release codename
   -a   Set the release architecture
+  -d   Set the desktop (e.g. GNOME)
   -C   Use cached packages only
   -v   Show verbose output
   -?   Show this usage
@@ -89,6 +90,7 @@ Long Options:
   --release-version   Same as -r
   --release-codename  Same as -n
   --release-arch      Same as -a
+  --desktop           Same as -d
   --cache-only        Same as -C
   --verbose           Same as -v
   --help              Same as -?
