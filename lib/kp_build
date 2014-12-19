@@ -341,7 +341,7 @@ function parse_args {
       -x|--clean)
         OPT_MOCK_CLEAN=1
         ;;
-      -x|--clean)
+      -X|--clean-each-package)
         OPT_MOCK_CLEAN_EACH=1
         ;;
       --no-sign)
@@ -445,7 +445,7 @@ function main {
     _info "Building for ${OPT_DIST} ${OPT_RELEASEVER} (${OPT_BASEARCH})"
     echo
 
-    if [ ! -z ${OPT_MOCK_CLEAN} ]
+    if [ ! -z "${OPT_MOCK_CLEAN}" ]
     then
       initialise_mock
     fi
@@ -482,7 +482,7 @@ function main {
         continue
       fi
 
-      if [ ! -z ${OPT_MOCK_CLEAN_EACH} -a -z ${_MOCK_CLEAN} ]
+      if [ ! -z "${OPT_MOCK_CLEAN_EACH}" -a -z "${_MOCK_CLEAN}" ]
       then
         _initialise_mock
       fi
