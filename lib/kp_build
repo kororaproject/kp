@@ -232,6 +232,7 @@ function _mock_build {
   if [ ${_MOCK_RET} -ne 0 ]
   then
     _error "Could not create source package, skipping package"
+    echo
     return 1
   fi
 
@@ -442,6 +443,7 @@ function main {
     _PACKAGE_BUILT=
 
     _info "Building for ${OPT_DIST} ${OPT_RELEASEVER} (${OPT_BASEARCH})"
+    echo
 
     if [ ! -z ${OPT_MOCK_CLEAN} ]
     then
@@ -453,6 +455,7 @@ function main {
 
     _debug "Copying source packages to: ${_REPO_SOURCE_DIR}"
     _debug "Copying arch packages to: ${_REPO_ARCH_DIR}"
+    echo
     _mkdir "${_REPO_ARCH_DIR}"
     _mkdir "${_REPO_SOURCE_DIR}"
 
@@ -468,12 +471,14 @@ function main {
       if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
       then
         _debug "Skipping depracated package: ${KP_NAME}"
+        echo
         continue
       fi
 
       if [ ! -d "${WORKING_PACKAGES_DIR}/${KP_NAME}" ]
       then
         _error "Package is not checked out, skipping"
+        echo
         continue
       fi
 
