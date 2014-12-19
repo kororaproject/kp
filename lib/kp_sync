@@ -237,7 +237,7 @@ function main {
       # check for package deprecation, skip unless we're including them
       if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
       then
-        _debug "Skipping depracated package: ${KP_NAME}"
+        _debug "Skipping depracated package: ${KP_NAME}\n"
         continue
       fi
 
@@ -260,9 +260,6 @@ function main {
       then
         git fetch --all
       else
-        # check package version with spec
-        get_spec_version "build/${KP_BUILD_SPEC}"
-
         # calculate the local/remote heads
         _LOCAL_HEAD=$(git log --pretty=format:'%H' -n 1)
         _REMOTE_HEAD=
@@ -337,26 +334,32 @@ function main {
         fi
 
         # we have a head so update the configuration information
-        if [[ "${_HAVE_DELTA}" == "1" || "${OPT_FORCE_LOCAL_VERSION}" == "1" && "${KP_UPSTREAM_SRC_TYPE}" != "srpm" ]]
+        if [[ "${_HAVE_DELTA}" == "1" || "${OPT_FORCE_LOCAL_VERSION}" == "1" ]]
         then
-          _VERBOSE_FORCE=
-          [ "${OPT_FORCE_LOCAL_VERSION}" == "1" ] && _VERBOSE_FORCE=" (forced)"
-          _info "Updating upstream configuration information${_VERBOSE_FORCE} ..."
+          if [[ "${KP_UPSTREAM_SRC_TYPE}" != "srpm" ]]
+          then
+            _VERBOSE_FORCE=
+            [ "${OPT_FORCE_LOCAL_VERSION}" == "1" ] && _VERBOSE_FORCE=" (forced)"
+            _info "Updating upstream configuration information${_VERBOSE_FORCE} ..."
 
-          _pushd "${WORKING_DIR}/conf"
+            _pushd "${WORKING_DIR}/conf"
 
-          sed -i -e "s/^KP_VERSION=.*/KP_VERSION=${_SPEC_VERSION}/" \
-                 -e "s/^KP_RELEASE=.*/KP_RELEASE=${_SPEC_RELEASE}/" \
-                 -e "s/^KP_RELEASE_GIT_COMMIT=.*/KP_RELEASE_GIT_COMMIT=${_LOCAL_HEAD}/" \
-                 "packages.d/${F}"
+            # get package version with spec
+            get_spec_version "build/${KP_BUILD_SPEC}"
 
-          git add "packages.d/${F}"
-          git commit -m "updated: version bump for ${KP_NAME} ${_VERBOSE_FORCE}"
+            sed -i -e "s/^KP_VERSION=.*/KP_VERSION=${_SPEC_VERSION}/" \
+                   -e "s/^KP_RELEASE=.*/KP_RELEASE=${_SPEC_RELEASE}/" \
+                   -e "s/^KP_RELEASE_GIT_COMMIT=.*/KP_RELEASE_GIT_COMMIT=${_LOCAL_HEAD}/" \
+                   "packages.d/${F}"
 
-          # push the configuration changes
-          git push origin "${CURRENT_BRANCH}"
+            git add "packages.d/${F}"
+            git commit -m "updated: version bump for ${KP_NAME} ${_VERBOSE_FORCE}"
 
-          _popd
+            # push the configuration changes
+            git push origin "${CURRENT_BRANCH}"
+
+            _popd
+          fi
         fi
 
         _info "Up to date."
