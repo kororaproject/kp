@@ -72,7 +72,11 @@ function _initialise_mock {
 }
 
 function _generate_spec {
-  _pushd "${WORKING_PACKAGES_DIR}/${KP_NAME}/build/"
+  __BUILD_DIR="${WORKING_PACKAGES_DIR}/${KP_NAME}/build/"
+
+  # add missing build dir
+  [ -d "${__BUILD_DIR}" ] || mkdir -p "${__BUILD_DIR}"
+  _pushd "${__BUILD_DIR}"
 
   # calculate patch list
   _PATCH_FILES=
@@ -134,6 +138,11 @@ function _gather_source {
       if [ $? == 0 ]; then
         _COMPLETE=1
         _info "Using source RPM ..."
+
+
+        # build our spec information now that we have the SRPM
+        _SPEC_VERSION=$(rpm -qp --queryformat="%{version}" "${_SRPM}")
+        _SPEC_RELEASE=$(rpm -qp --queryformat="%{release}" "${_SRPM}" | sed 's/\.fc.*$//')
       else
         _error "Failed to get full source RPM."
         _RET=1
@@ -221,8 +230,8 @@ function _mock_build {
 
   [ -z ${OPT_VERBOSE} ] &&  _VERBOSE="-q" || _VERBOSE="-v"
 
-  _debug "Building source package, please wait ..."
   if [[ "${KP_UPSTREAM_SRC_TYPE}" != "srpm" ]]; then
+    _debug "Building source package, please wait ..."
     ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --buildsrpm --spec "${_BUILD_SPEC}" --sources sources/
   fi
   _MOCK_RET=${?}
@@ -237,10 +246,11 @@ function _mock_build {
   fi
 
   _debug "Building package, please wait ..."
-  # --no-clean because we have srpm in there, else need to copy out (and build should be clean anyway)
   if [[ "${KP_UPSTREAM_SRC_TYPE}" == "srpm" ]]; then
-    ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild "sources/${_SRPM}"
+    # we avoid --no-clean because we have srpm in sources
+    ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild "sources/${_SRPM}"
   else
+    # --no-clean because we have srpm in there, else need to copy out (and build should be clean anyway)
     ${MOCK_BIN} ${MOCK_OPTS} ${_VERBOSE} --no-clean --root ${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH} --rebuild /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/$(basename $(grep ^Wrote: /var/lib/mock/${OPT_DIST}-${OPT_RELEASEVER}-${OPT_BASEARCH}/result/build.log |grep src.rpm |awk {'print $2'} |uniq))
   fi
   _MOCK_RET=${?}
@@ -463,7 +473,10 @@ function main {
     for F in $(list_config_available "${PACKAGES}")
     do
       load_config ${F}
-      [ ${?} -ne 0 ] && continue
+      if [ ${?} -ne 0 ]; then
+        _info "Unable to load configuration. Skipping.\n"
+        continue
+      fi
 
       _info "Loaded config: ${KP_NAME}"
 
@@ -501,21 +514,56 @@ function main {
         _warn "This is a \"git\" upstream package. Due to SPEC file limitations it is strongly recommended that a build.helper be implemented for this package."
       fi
 
-      build_pre_init || continue
+      build_pre_init
+      if [ ${?} != 0 ]
+      then
+        _debug "Failed build_pre_init"
+        continue
+      fi
 
-      _generate_spec ${F} || continue
+      _generate_spec ${F}
+      if [ ${?} != 0 ]
+      then
+        _debug "Failed generate_spec"
+        continue
+      fi
 
-      build_pre_fetch || continue
+      build_pre_fetch
+      if [ ${?} != 0 ]
+      then
+        _debug "Failed build_pre_fetch"
+        continue
+      fi
 
-      _gather_source ${F} || continue
+      _gather_source ${F}
+      if [ ${?} != 0 ]
+      then
+        _debug "Failed gather_source"
+        continue
+      fi
 
-      build_pre_build || continue
+      build_pre_build
+      if [ ${?} != 0 ]
+      then
+        _debug "Failed build_pre_build"
+        continue
+      fi
 
       _info "Building: ${KP_NAME} (${_SPEC_VERSION}-${_SPEC_RELEASE})"
 
-      _mock_build ${F} || continue
+      _mock_build ${F}
+      if [ ${?} != 0 ]
+      then
+        _debug "Failed mock_build"
+        continue
+      fi
 
-      build_post_build || continue
+      build_post_build
+      if [ ${?} != 0 ]
+      then
+        _debug "Failed build_post_build"
+        continue
+      fi
 
       _PACKAGE_BUILT=1
 
