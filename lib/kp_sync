@@ -342,10 +342,11 @@ function main {
             [ "${OPT_FORCE_LOCAL_VERSION}" == "1" ] && _VERBOSE_FORCE=" (forced)"
             _info "Updating upstream configuration information${_VERBOSE_FORCE} ..."
 
-            _pushd "${WORKING_DIR}/conf"
-
             # get package version with spec
             get_spec_version "build/${KP_BUILD_SPEC}"
+
+            _pushd "${WORKING_DIR}/conf"
+
 
             sed -i -e "s/^KP_VERSION=.*/KP_VERSION=${_SPEC_VERSION}/" \
                    -e "s/^KP_RELEASE=.*/KP_RELEASE=${_SPEC_RELEASE}/" \
