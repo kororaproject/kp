@@ -159,7 +159,7 @@ function main {
     BRANCH_LOCAL_ONLY=
 
     # check that we have packages to sync
-    if [ -z "$(ls -A ${WORKING_PACKSES_DIR})" ]
+    if [ -z "$(ls -A ${WORKING_PACKAGES_DIR})" ]
     then
       _error "There are no packages checked out. Try kp --checkout."
       return 1
@@ -204,7 +204,7 @@ function main {
 
         if [ "${OPT_NO_PUSH}" != "1" ]
         then
-          if [[ ${_DELTA_COUNT} -gt 0 || "${_BRANCH_LOCAL_ONLY}" == "1" ]]
+          if [[ ${_DELTA_COUNT} -gt 0 || "${BRANCH_LOCAL_ONLY}" == "1" ]]
           then
             _info "Pushing new local configuration branch: ${CURRENT_BRANCH}"
 
