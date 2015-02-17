@@ -24,6 +24,7 @@ OPT_CHECKOUT_ONLY=
 OPT_RELEASE=
 OPT_NO_UPSTREAM=
 OPT_CREATE_BRANCH=
+OPT_INCLUDE_DEPRACATED=
 
 
 #
@@ -202,22 +203,23 @@ function usage {
   _EXIT_VAL=${1:-0}
 
   cat << EOF
-  Usage: $0 [-v] -r RELEASE package1 package2 ... packageN
+Usage: $0 [-v] -r RELEASE package1 package2 ... packageN
 
-  Options:
-    -n          Don't checkout the upstream source
-    -r RELEASE  Checkout specified Korora release
-    -v          Show verbose output
-    -?          Show this usage
-    -V          Show version
+Options:
+  -n          Don't checkout the upstream source
+  -r RELEASE  Checkout specified Korora release
+  -v          Show verbose output
+  -?          Show this usage
+  -V          Show version
 
-  Long Options:
-    --create       Create release branch if not existing
-    --no-upstream  Same as -n
-    --release      Same as -r
-    --verbose      Same as -v
-    --help         Same as -?
-    --version      Same as -V
+Long Options:
+  --create                Create release branch if not existing
+  --no-upstream           Same as -n
+  --release               Same as -r
+  --include-depracated    Include deprecated packages
+  --verbose               Same as -v
+  --help                  Same as -?
+  --version               Same as -V
 
 EOF
 
@@ -255,6 +257,9 @@ function parse_args {
         ;;
       -h|--help)
         usage 0
+        ;;
+      --include-depracated)
+        OPT_INCLUDE_DEPRACATED=1
         ;;
       --)
         shift
@@ -313,6 +318,14 @@ function main {
     for F in $(list_config_available "${PACKAGES}")
     do
       load_config ${F}
+
+      # check for package deprecation, skip unless we're including them
+      if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
+      then
+        _debug "Skipping depracated package: ${KP_NAME}"
+        echo
+        continue
+      fi
 
       # start the checkout
       echo "Checking out: ${KP_NAME}"
