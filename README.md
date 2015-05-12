@@ -74,39 +74,30 @@ KEY_ID[19]=DCBE2AC3
 ```
 As a first step, copy the contents above into the kp.conf file that is present
 in the kp tool dir. Keep a copy of the original, if you wish. Initially get
-comfortable with the tool by typing
-
-    ./kp --help,   followed by
-    ./kp [command] --help
-
-respectively, where `[command]` is the list of available options that the tool can
-handle for building korora packages.
+comfortable with the tool by typing `./kp --help` followed by 
+`./kp [command] --help` respectively, where `[command]` is the list of available 
+options that the tool can handle for building korora packages.
 
 The next step is to do some tool "housekeeping". This sets up the dir structure
 and other config files needed for the tool to pull the upstream repos for the
-korora build. To do this type
-```
-    ./kp  init  {or} ./kp --init
-```
-and you are ready to do business...
+korora build. To do this type `./kp  init` or `./kp --init` and you are ready 
+to do business...
 
 
 Now, get a feel for the various packages needed for kororification of your
-system by typing
-```
-    ./kp  list  {or}  ./kp --list
-```
-lists all the packages/kickstarts that are relevant for the process.  Initially
-the packages will come with a '-' next to them. This means, the package in
-question is available, but not checked out.  As you start working with packages,
-the '-' will be replaced by other symbols. The help command will provide you
-with details on the various symbols and their meanings. (Hint: `./kp list --help`)
+system by typing `./kp  list` or `./kp --list` lists all the packages/kickstarts 
+that are relevant for the process.  Initially the packages will come with a '-' 
+next to them. This means, the package in question is available, but not checked out.
+As you start working with packages, the '-' will be replaced by other symbols. 
+The help command will provide you with details on the various symbols and their meanings.
+(Hint: `./kp list --help`)
 
 Once you can see the list of korora packages, you can issue a bulk checkout
 which will pull all the upstream repos to your local machine. For example, in
 the above example (from kp. conf above), when you issue a checkout, the
 individual packages checked out from the repositories will reside in the
 following directory:
+
    `/home/jackychan/projects/kpchan/packages/`
 
 To checkout all or a specific [package], issue
@@ -114,10 +105,11 @@ To checkout all or a specific [package], issue
     ./kp checkout [package]   {or} ./kp --checkout [package]
 ```
 Examples:
-
+```
     ./kp checkout handbrake # pulls handbrake tool from repos
     ./kp checkout jockey # drivers support from ubuntu's stable
     ./kp checkout  # get the full kaboodle
+```
 
 Note that the build operation fetches information from online repositories and
 therefore requires a working internet connection.  If all this went smoothly,
@@ -131,7 +123,7 @@ excellent resources available on the internet. For example:
 ```
 http://wiki.centos.org/HowTos/SELinux
 http://en.wikipedia.org/wiki/Security-Enhanced_Linux
-  ```
+```
 
 On the terminal, type
 ```
@@ -141,16 +133,16 @@ On the terminal, type
     # like checkout, omitting a package builds everything, and
     # specifying a package name builds only that package
     sudo setenforce 1 #  set mode to enforcing again
-    ```
+```
 
 Copy any errors that you may encounter, as it will assist in troubleshooting
 issues.
 
 If you are satisfied with all the actions so far, and wish to deploy a korora
 ISO of your own, type this (as sudo) in your terminal.
-
+```
     sudo ./kp release [gnome/kde] # self-explanatory
-
+```
 Now to briefly look at local(ised) configuration files that provide
 package-level granularity in controlling the kp tool. As always, here's an
 annotated file for the jockey proprietary driver support tool, shown below:
@@ -192,6 +184,7 @@ KP_RELEASE_GIT_COMMIT=
 
 ---8<--- end jockey.conf --->8---
 ```
+
 **File Tree**
 ```
 ./upstream
