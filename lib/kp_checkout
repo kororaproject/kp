@@ -92,7 +92,7 @@ function _package_upstream_checkout {
     _mkdir "${_UPSTREAM_DIR}"
 
     # check if we have a checkout already
-    if [ ! -d "${UPSTREAM_DIR}/.git" ]
+    if [ ! -d "${_UPSTREAM_DIR}/.git" ]
     then
       # update tree, fetching all branches and tags
       _debug "Cloning upstream: ${KP_UPSTREAM_SRC_URL}"
