@@ -25,5 +25,7 @@ CONF_DIR="/var/lib/kp/conf"
 DEBUG=1
 
 # Set the key to use for a release version, e.g. 18 and 19
-KEY_ID[18]=30B55DCA
 KEY_ID[19]=DCBE2AC3
+KEY_ID[20]=
+KEY_ID[21]=
+KEY_ID[22]=
