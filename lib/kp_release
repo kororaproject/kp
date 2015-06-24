@@ -212,6 +212,8 @@ function main {
     for R in $(list_kickstart_available "${RELEASES}")
     do
 
+      _FILE="korora-${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}-${OPT_RELEASE_BASEARCH}-${R/korora-/}-live"
+
       #
       _info "Preparing to build: $R"
       _info "  - Title:        ${OPT_RELEASE_TITLE}"
@@ -219,21 +221,25 @@ function main {
       _info "  - Version:      ${OPT_RELEASE_VERSION}"
       _info "  - Architecture: ${OPT_RELEASE_BASEARCH}"
       _info "  - Desktop:      ${OPT_RELEASE_DESKTOP}"
+      _info "  - FS Label:     ${_FILE}"
 
-      _FILE="korora-${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}-${OPT_RELEASE_BASEARCH}-${R}-live"
 
       # create working directory
-      _TEMPLATE="/tmp/${R}.ks.${RANDOM}"
-      _TEMPLATE_FLATTENED="/tmp/${R}-flattened.ks.${RANDOM}"
+      _RANDOM=${RANDOM}
+      _TEMPLATE_FLATTENED="/tmp/${R}-flattened.ks.${_RANDOM}"
+      _TEMPLATE="/tmp/${R}.ks.${_RANDOM}"
 
       _info "Preparing release template: ${_TEMPLATE}"
 
-      #
-      _template_inflate "${_TEMPLATE}" "${WORKING_DIR}/conf/kickstart.d/${R}.ks"
+      pushd "${WORKING_DIR}/conf/kickstart.d/"
 
       # flattening template
-      _info "Flattening template into: ${_TEMPLATE_FLATTENED}"
-      ksflatten -c "${_TEMPLATE}" -o "${_TEMPLATE_FLATTENED}"
+      _info "Flattening template as: ${_TEMPLATE_FLATTENED}"
+      ksflatten -c "${R}.ks" -o "${_TEMPLATE_FLATTENED}"
+
+      _info "Inflating template as: ${_TEMPLATE}"
+      _template_inflate "${_TEMPLATE}" "${_TEMPLATE_FLATTENED}"
+      popd
 
       # create the CD
       _info "Creating release ..."
