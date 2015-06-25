@@ -214,6 +214,13 @@ function main {
 
       _FILE="korora-${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}-${OPT_RELEASE_BASEARCH}-${R/korora-/}-live"
 
+      # auto-detect desktop name if not set
+      if [ -z "${OPT_RELEASE_DESKTOP}" ]
+      then
+        DESKTOP=${R/korora-/}
+        OPT_RELEASE_DESKTOP=${DESKTOP^^}
+      fi
+
       #
       _info "Preparing to build: $R"
       _info "  - Title:        ${OPT_RELEASE_TITLE}"
