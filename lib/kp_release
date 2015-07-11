@@ -30,6 +30,7 @@ OPT_RELEASE_CODENAME="Sheldon"
 OPT_RELEASE_BASEARCH="x86_64"
 OPT_RELEASE_TITLE="Korora"
 OPT_RELEASE_DESKTOP=
+OPT_RELEASE_DIR=
 
 #
 # PRIVATE FUNCTIONS
@@ -137,6 +138,10 @@ function parse_args {
         ;;
       -d|--desktop)
         OPT_RELEASE_DESKTOP="$2"
+        shift
+        ;;
+      -D)
+        OPT_RELEASE_DIR="$2"
         shift
         ;;
       -C|--cache-only)

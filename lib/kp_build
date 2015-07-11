@@ -23,7 +23,7 @@ OPT_VERBOSE=
 OPT_MOCK_CLEAN=
 OPT_MOCK_CLEAN_EACH=
 OPT_PAUSE_ON_ERROR=
-OPT_NO_SIGN=
+OPT_SIGN=
 OPT_INCLUDE_DEPRACATED=
 
 OPT_DIST=$(_machine_dist)
@@ -307,7 +307,7 @@ Long Options:
   --testing               Same as -t
   --clean                 Same as -x
   --clean-each-package    Same as -X
-  --no-sign               Don't sign package once it's built
+  --sign                  Sign package once it's built
   --pause-on-error        Pause before continuing on package build error
   --include-depracated    Include deprecated packages
   --verbose               Same as -v
@@ -354,8 +354,8 @@ function parse_args {
       -X|--clean-each-package)
         OPT_MOCK_CLEAN_EACH=1
         ;;
-      --no-sign)
-        OPT_NO_SIGN=1
+      --sign)
+        OPT_SIGN=1
         ;;
       --pause-on-error)
         OPT_PAUSE_ON_ERROR=1
@@ -573,7 +573,7 @@ function main {
     # rebuild the repository directory
     if [ ! -z "${_PACKAGE_BUILT}" ]
     then
-      if [[ -z "${OPT_NO_SIGN}" || ${OPT_NO_SIGN} -ne 1 ]]
+      if [[ -n "${OPT_SIGN}" && ${OPT_SIGN} -eq 1 ]]
       then
         _info "Signing packages ..."
 
