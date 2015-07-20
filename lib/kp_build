@@ -457,7 +457,7 @@ function main {
 
     if [ ! -z "${OPT_MOCK_CLEAN}" ]
     then
-      initialise_mock
+      _initialise_mock
     fi
 
     _REPO_SOURCE_DIR="${WORKING_REPOSITORY_DIR}/${OPT_TYPE}/${OPT_RELEASEVER}/source"
