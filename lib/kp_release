@@ -24,7 +24,7 @@ OPT_USB=
 OPT_ISO=1
 OPT_CACHE_ONLY=
 
-OPT_RELEASE_VERSION=22
+OPT_RELEASE_VERSION=23
 OPT_RELEASE_MINOR_VERSION=
 OPT_RELEASE_CODENAME="none"
 OPT_RELEASE_BASEARCH="x86_64"
@@ -48,6 +48,8 @@ function _template_inflate {
   # substitute variables
   sed -i -e "s@%%KP_KICKSTART_DIR%%@${WORKING_DIR}/conf/kickstart.d@g" \
          -e "s@%%KP_REPOSITORY%%@file://${WORKING_DIR}/repository@g" \
+         -e "s@\$basearch@${OPT_RELEASE_BASEARCH}@g" \
+         -e "s@\$releasever@${OPT_RELEASE_VERSION}@g" \
          -e "s@%%KP_BASEARCH%%@${OPT_RELEASE_BASEARCH}@g" \
          -e "s@%%KP_VERSION%%@${OPT_RELEASE_VERSION}@g" ${_DST_FILE}
 
