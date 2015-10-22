@@ -237,7 +237,7 @@ function main {
       # check for package deprecation, skip unless we're including them
       if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
       then
-        _debug "Skipping depracated package: ${KP_NAME}\n"
+        _debug "Skipping deprecated package: ${KP_NAME}\n"
         continue
       fi
 
