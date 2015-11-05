@@ -29,7 +29,7 @@ OPT_FORCE=
 function _create_dirs {
   _pushd "${WORKING_DIR}"
 
-  for D in conf packages repository kickstart release release/cache release/tmp
+  for D in conf packages repository release release/cache release/tmp
   do
     if [ ! -d "${D}" ]
     then

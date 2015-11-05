@@ -6,20 +6,27 @@ KP_DEV_ACCOUNT=""
 KP_DEV_EMAIL=""
 
 # Protocol for git (can be 'git' or 'https' or 'ssh')
+# Devs should use ssh
 GIT_PROTOCOL="git"
 
-# URLs for git
+# Git group on github for git URLs
 REPO_USER="kororaproject"
 
 GIT_URL_GIT="git://github.com/${REPO_USER}"
 GIT_URL_HTTP="https://github.com/${REPO_USER}"
 GIT_URL_SSH="git@github.com:${REPO_USER}"
 
-# Temporary location for building packages
-TMP_DIR=/var/lib/kp
-CONF_DIR="/var/lib/kp/conf"
-#WORKING_DIR="/var/cache/kp"
-#LIB_DIR="./lib"
+# Determine path to the kp git repository
+REPO_DIR="$(dirname $(readlink -f $0))"                                                                  
+
+# Working directories
+WORKING_DIR="${REPO_DIR}/build"
+LOG_DIR="${WORKING_DIR}/log"
+TMP_DIR="${WORKING_DIR}/tmp"
+
+# KP directories
+CONF_DIR="${REPO_DIR}/conf"
+LIB_DIR="${REPO_DIR}/lib"
 
 # Enable debug
 DEBUG=1
@@ -29,3 +36,4 @@ KEY_ID[19]=DCBE2AC3
 KEY_ID[20]=
 KEY_ID[21]=
 KEY_ID[22]=
+KEY_ID[23]=
