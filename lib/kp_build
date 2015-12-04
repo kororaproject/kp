@@ -336,7 +336,7 @@ function parse_args {
         OPT_BASEARCH=$2
         shift
         ;;
-      -d|--distribition)
+      -d|--distribution)
         OPT_DIST=$2
         shift
         ;;
