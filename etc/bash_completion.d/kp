@@ -39,21 +39,21 @@ _kp_help()
       esac } \
     | while read -r line; do
         if [[ $line =~ (Commands:) ]] ; then
-            in_list=1
+            _in_list=1
             continue
         fi
-        [[ -z "${in_list}" ]] && continue
+        [[ -z "${_in_list}" ]] && continue
 
         [[ -n "${line}" ]] && \
-            printf "%s\n" $prefix$line
+            printf "%s\n" "$prefix$line"
     done
     # Help is always available for those who ask for it
-    printf "%s" ${prefix}"help"
+    printf "%s" "${prefix}help"
 }
 
 _kp()
 {
-    local cur prev words cword split
+    local cur words cword
     _init_completion -s || return
 
 
@@ -73,11 +73,7 @@ _kp()
 
     local prog=${words[0]}
     local cmd=${words[1]}
-    local arg1=${words[2]}
-    local arg2=${words[3]}
-    local arg3=${words[4]}
 
-    local prev=${words[$cword - 2]}
     local lastarg=${words[$cword - 1]}
 
     case $cmd in
