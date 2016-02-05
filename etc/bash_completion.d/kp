@@ -1,0 +1,147 @@
+# Korora project build tool
+# kp completion                                         -*- shell-script -*-
+
+
+_kp_command_help()
+{
+    eval local cmd=$( quote "$1" )
+    local line
+    local arg_len="${2}"
+    local sub_cmd="${3}"
+    { case $cmd in
+        -) cat ;;
+        *) LC_ALL=C "$( dequote "$cmd" )" $sub_cmd --help 2>&1 ;;
+      esac } \
+    | while read -r line; do
+        [[ $line =~ (^-) ]] || continue
+        while [[ $line =~ \
+            ((^|[^-])-[A-Za-z0-9?][[:space:]]+)\[?[A-Z0-9]+\]? ]]; do
+             line=${line/"${BASH_REMATCH[0]}"/"${BASH_REMATCH[1]}"}
+        done
+
+        if [[ "$arg_len" == "long"  && "${line}" =~ (^--[A-Za-z0-9?]) ]] ||
+           [[ "$arg_len" == "short" && "${line}" =~ (^-[A-Za-z0-9?]) ]] ; then
+            __parse_options "${line// or /, }"
+        fi
+    done
+}
+
+
+_kp_help()
+{
+    eval local cmd=$( quote "$1" )
+    local line
+    local _in_list=
+    local prefix="${2}"
+    { case $cmd in
+        -) cat ;;
+        *) LC_ALL=C "$( dequote "$cmd" )" --help 2>&1 ;;
+      esac } \
+    | while read -r line; do
+        if [[ $line =~ (Commands:) ]] ; then
+            _in_list=1
+            continue
+        fi
+        [[ -z "${_in_list}" ]] && continue
+
+        [[ -n "${line}" ]] && \
+            printf "%s\n" "$prefix$line"
+    done
+    # Help is always available for those who ask for it
+    printf "%s" "${prefix}help"
+}
+
+_kp()
+{
+    local cur words cword
+    _init_completion -s || return
+
+
+    if [[ $cword -eq 1 ]]; then
+        case $cur in
+            -*)
+                # Initial command does not support short options
+                COMPREPLY=( $( compgen -W "$( _kp_help $1 '--') " -- "$cur" ) )
+                ;;
+
+            *)
+                COMPREPLY=( $( compgen -W "$( _kp_help $1 ) " -- "$cur" ) )
+                ;;
+        esac
+        return 0
+    fi
+
+    local prog=${words[0]}
+    local cmd=${words[1]}
+
+    local lastarg=${words[$cword - 1]}
+
+    case $cmd in
+
+    esac
+
+
+    case $lastarg in
+        # kp_build
+        -a|--arch|--release-arch)
+            COMPREPLY=( $( compgen -W ' ' -- "$cur" ) )
+            return 0
+            ;;
+        -d|--distribition|--distribution)
+            COMPREPLY=( $( compgen -W ' korora fedora' -- "$cur" ) )
+            return 0
+            ;;
+        -r|--releasever)
+            COMPREPLY=( $( compgen -W ' ' -- "$cur" ) )
+            return 0
+            ;;
+        # kp_checkout
+        -r|--release)
+            if [ "$cmd" != "--release" ]; then
+                COMPREPLY=( $( compgen -W ' master k19 k20 k21 ' -- "$cur" ) )
+                return 0
+            fi
+            ;;
+
+        # kp_release
+        -t|--release-title)
+            ;;
+        -r|--release-version)
+            ;;
+        -m|--minor-version)
+            ;;
+        -n|--release-codename)
+            ;;
+
+        -d|--desktop)
+            COMPREPLY=( $( compgen -W 'cinnamon gnome kde mate xfce' -- "$cur" ) )
+            return 0
+            ;;
+
+        #kp_repository
+        -r|--releasever)
+            ;;
+
+        -?|-h|--help)
+            return 0
+            ;;
+        -V|--version)
+            return 0
+            ;;
+    esac
+
+    case $cur in
+        --*)
+            COMPREPLY=( $( compgen -W "$( _kp_command_help ${prog} 'long' $cmd ) " -- "$cur" ) )
+            return 0
+            ;;
+        *)
+            COMPREPLY=( $( compgen -W "$( _kp_command_help ${prog} 'short' $cmd ) " -- "$cur" ) )
+            return 0
+            ;;
+    esac
+
+    } &&
+complete -F _kp kp
+
+# ex: ts=4 sw=4 et filetype=sh
