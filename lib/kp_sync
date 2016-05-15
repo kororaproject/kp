@@ -29,7 +29,7 @@ OPT_FORCE_REMOTE_FETCH=
 OPT_FORCE_LOCAL_VERSION=
 OPT_CACHE=
 OPT_INCLUDE_DEPRACATED=
-OPT_NO_PULL=1
+OPT_NO_PULL=
 OPT_NO_PUSH=1
 
 #
@@ -54,7 +54,7 @@ Long Options:
   --force-local-version  Force the configuration to be updated based on local versions
   --interactive          Same as -i
   --push                 Push local changes upstream
-  --pull                 Merge upstream changes locally
+  --no-pull              Do not pull and merge upstream changes
   --fetch-only           Only fetch from remotes, don't pull or rebase
   --include-depracated   Include deprecated packages
   --verbose              Same as -v
@@ -73,7 +73,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="cache reset force-remote-fetch force-local-version include-depracated verbose version help interactive push pull fetch-only" "C v V ? i" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="cache reset force-remote-fetch force-local-version include-depracated verbose version help interactive push no-pull fetch-only" "C v V ? i" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -96,8 +96,8 @@ function parse_args {
       -i|--interactive)
         OPT_INTERACTIVE=1
         ;;
-      --pull)
-        OPT_NO_PULL=
+      --no-pull)
+        OPT_NO_PULL=1
         ;;
       --push)
         OPT_NO_PUSH=
