@@ -140,7 +140,7 @@ function _info {
 function _debug {
   _MSG=${1:-""}
 
-  [ -z "${DEBUG}" ] && return 0
+  [ "${DEBUG}" == "1" ] || return 0
 
   echo -e "${_MSG}" >&2
 
