@@ -24,7 +24,7 @@ OPT_CHECKOUT_ONLY=
 OPT_RELEASE=
 OPT_NO_UPSTREAM=
 OPT_CREATE_BRANCH=
-OPT_INCLUDE_DEPRACATED=
+OPT_INCLUDE_DEPRECATED=
 
 
 #
@@ -216,7 +216,7 @@ Long Options:
   --create                Create release branch if not existing
   --no-upstream           Same as -n
   --release               Same as -r
-  --include-depracated    Include deprecated packages
+  --include-deprecated    Include deprecated packages
   --verbose               Same as -v
   --help                  Same as -?
   --version               Same as -V
@@ -258,8 +258,8 @@ function parse_args {
       -h|--help)
         usage 0
         ;;
-      --include-depracated)
-        OPT_INCLUDE_DEPRACATED=1
+      --include-deprecated)
+        OPT_INCLUDE_DEPRECATED=1
         ;;
       --)
         shift
@@ -320,7 +320,7 @@ function main {
       load_config ${F}
 
       # check for package deprecation, skip unless we're including them
-      if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
+      if [ "${KP_DEPRECATED}" == "yes" -a "${OPT_INCLUDE_DEPRECATED}" != "1" ]
       then
         _debug "Skipping deprecated package: ${KP_NAME}"
         echo

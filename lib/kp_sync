@@ -28,7 +28,7 @@ OPT_RESET=
 OPT_FORCE_REMOTE_FETCH=
 OPT_FORCE_LOCAL_VERSION=
 OPT_CACHE=
-OPT_INCLUDE_DEPRACATED=
+OPT_INCLUDE_DEPRECATED=
 OPT_NO_PULL=
 OPT_NO_PUSH=1
 
@@ -56,7 +56,7 @@ Long Options:
   --push                 Push local changes upstream
   --no-pull              Do not pull and merge upstream changes
   --fetch-only           Only fetch from remotes, don't pull or rebase
-  --include-depracated   Include deprecated packages
+  --include-deprecated   Include deprecated packages
   --verbose              Same as -v
   --help                 Same as -?
   --version              Same as -V
@@ -73,7 +73,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="cache reset force-remote-fetch force-local-version include-depracated verbose version help interactive push no-pull fetch-only" "C v V ? i" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="cache reset force-remote-fetch force-local-version include-deprecated verbose version help interactive push no-pull fetch-only" "C v V ? i" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -105,8 +105,8 @@ function parse_args {
       --fetch-only)
         OPT_FETCH_ONLY=1
         ;;
-      --include-depracated)
-        OPT_INCLUDE_DEPRACATED=1
+      --include-deprecated)
+        OPT_INCLUDE_DEPRECATED=1
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -235,7 +235,7 @@ function main {
       load_config ${F} || continue
 
       # check for package deprecation, skip unless we're including them
-      if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
+      if [ "${KP_DEPRECATED}" == "yes" -a "${OPT_INCLUDE_DEPRECATED}" != "1" ]
       then
         _debug "Skipping deprecated package: ${KP_NAME}\n"
         continue

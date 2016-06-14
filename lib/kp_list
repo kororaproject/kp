@@ -21,7 +21,7 @@
 #
 OPT_VERBOSE=
 OPT_CHECKOUT_ONLY=
-OPT_INCLUDE_DEPRACATED=
+OPT_INCLUDE_DEPRECATED=
 
 
 #
@@ -41,7 +41,7 @@ Options:
 
 Long Options:
   --checkout            Same as -c
-  --include-depracated  Include deprecated packages
+  --include-deprecated  Include deprecated packages
   --verbose             Same as -v
   --help                Same as -?
   --version             Same as -V
@@ -67,7 +67,7 @@ EOF
 #
 
 function parse_args {
-  CMD_LINE=$(getopt -n$0 -u --longoptions="checkout include-depracated verbose version help" "c v V ?" $@)
+  CMD_LINE=$(getopt -n$0 -u --longoptions="checkout include-deprecated verbose version help" "c v V ?" $@)
   [ ${?} -ne 0 ] && usage 1
 
   set -- ${CMD_LINE}
@@ -78,8 +78,8 @@ function parse_args {
       -c|--checkout)
         OPT_CHECKOUT_ONLY=1
         ;;
-      --include-depracated)
-        OPT_INCLUDE_DEPRACATED=1
+      --include-deprecated)
+        OPT_INCLUDE_DEPRECATED=1
         ;;
       -v|--verbose)
         OPT_VERBOSE=1
@@ -142,7 +142,7 @@ function main {
       load_config ${F} || continue
 
       # check for package deprecation, skip unless we're including them
-      if [ "${KP_DEPRACATED}" == "yes" -a "${OPT_INCLUDE_DEPRACATED}" != "1" ]
+      if [ "${KP_DEPRECATED}" == "yes" -a "${OPT_INCLUDE_DEPRECATED}" != "1" ]
       then
         _debug "Skipping deprecated package: ${KP_NAME}"
         continue
