@@ -225,7 +225,7 @@ function main {
     for R in $(list_kickstart_available "${RELEASES}")
     do
 
-      _FILE="korora-${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}-${OPT_RELEASE_BASEARCH}-${R/korora-/}"
+      _FILE="korora-${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}${OPT_RELEASE_BETA/\ B/-b}-${OPT_RELEASE_BASEARCH}-${R/korora-/}"
 
       # auto-detect desktop name if not set
       if [ -z "${OPT_RELEASE_DESKTOP}" ]
@@ -263,9 +263,11 @@ function main {
 
       # create the CD
       _info "Creating release ..."
-      setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}${OPT_RELEASE_BETA} (${OPT_RELEASE_CODENAME})" --product="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION} ${OPT_RELEASE_BASEARCH} ${OPT_RELEASE_DESKTOP}" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
+      #echo setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}${OPT_RELEASE_BETA} (${OPT_RELEASE_CODENAME})" --product="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION} ${OPT_RELEASE_BASEARCH} ${OPT_RELEASE_DESKTOP}" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
+      #setarch="$OPT_RELEASE_BASEARCH" livecd-creator ${_OPTS} --config="${_TEMPLATE}" --fslabel="${_FILE}" --title="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}${OPT_RELEASE_BETA} (${OPT_RELEASE_CODENAME})" --product="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION} ${OPT_RELEASE_BASEARCH} ${OPT_RELEASE_DESKTOP}" --cache="${WORKING_RELEASE_CACHE_DIR}" --tmpdir="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}"
 
-      # livemedia-creator --make-iso --ks="${_TEMPLATE_FLATTENED}" --image-name="${_FILE}" --title="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}" --project="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION} ${OPT_RELEASE_BASEARCH} ${OPT_RELEASE_DESKTOP}" --releasever="${OPT_RELEASE_VERSION}" --arch="${OPT_RELEASE_BASEARCH}" --tmp="${WORKING_RELEASE_TMP_DIR}" --logfile="${LOG_FILE}" --no-virt
+      echo livemedia-creator --ks="${_TEMPLATE}" --logfile="${LOG_FILE}" --no-virt --resultdir="${WORKING_RELEASE_TMP_DIR}/../iso/${_FILE}" --project="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}${OPT_RELEASE_BETA} ${OPT_RELEASE_BASEARCH} ${OPT_RELEASE_DESKTOP}" --make-iso --volid "${OPT_RELEASE_TITLE}-${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}${OPT_RELEASE_BETA/\ /-}-${OPT_RELEASE_BASEARCH}-${OPT_RELEASE_DESKTOP}" --iso-only --iso-name "${_FILE}.iso" --releasever "${OPT_RELEASE_VERSION}" --title="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}${OPT_RELEASE_BETA}" --macboot
+      livemedia-creator --ks="${_TEMPLATE}" --logfile="${LOG_FILE}" --no-virt --resultdir="${WORKING_RELEASE_TMP_DIR}/../iso/${_FILE}" --project="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}${OPT_RELEASE_BETA} ${OPT_RELEASE_BASEARCH} ${OPT_RELEASE_DESKTOP}" --make-iso --volid "${OPT_RELEASE_TITLE}-${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}${OPT_RELEASE_BETA/\ /-}-${OPT_RELEASE_BASEARCH}-${OPT_RELEASE_DESKTOP}" --iso-only --iso-name "${_FILE}.iso" --releasever "${OPT_RELEASE_VERSION}" --title="${OPT_RELEASE_TITLE} ${OPT_RELEASE_VERSION}${OPT_RELEASE_MINOR_VERSION}${OPT_RELEASE_BETA}" --macboot
 
       # clean up our inflated template file
       #rm -f "${_TEMPLATE}" "${_TEMPLATE_FLATTENED}"
